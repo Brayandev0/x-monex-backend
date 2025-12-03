@@ -2,44 +2,53 @@ import { DataTypes } from "sequelize";
 import { db } from "./database.js";
 
 export const Assinaturas = db.define("Assinaturas", {
-  uuid_Assinaturas: {
+  assinatura_id: {
     type: DataTypes.STRING(36),
     allowNull: false,
-    primaryKey: true
+    primaryKey: true,
+    field: "uuid_Assinaturas"
   },
-  uuid_Usuarios: {
+  usuario_id: {
     type: DataTypes.STRING(36),
-    allowNull: false
+    allowNull: false,
+    field: "uuid_Usuarios"
   },
-  uuid_Planos: {
+  plano_id: {
     type: DataTypes.STRING(36),
-    allowNull: false
+    allowNull: false,
+    field: "uuid_Planos"
   },
-  uuid_Cartoes: {
+  cartao_id: {
     type: DataTypes.STRING(36),
-    allowNull: false
+    allowNull: false,
+    field: "uuid_Cartoes"
   },
-  email_Assinaturas: {
+  email: {
     type: DataTypes.STRING(200),
-    allowNull: false
+    allowNull: false,
+    field: "email_Assinaturas"
   },
-  metodo_pag_Assinaturas: {
+  meio: {
     type: DataTypes.STRING(20),
-    allowNull: false
+    allowNull: false,
+    field: "metodo_pag_Assinaturas"
   },
-  status_Assinaturas: {
+  status: {
     type: DataTypes.STRING(15),
     allowNull: false,
-    defaultValue: "pendente"
+    defaultValue: "pendente",
+    field: "status_Assinaturas"
   },
-  vencimento_Assinaturas: {
+  vencimento: {
     type: DataTypes.DATEONLY,
-    allowNull: false
+    allowNull: false,
+    field: "vencimento_Assinaturas"
   },
-  criado_em_Assinaturas: {
+  criado_em: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW
+    defaultValue: DataTypes.NOW,
+    field: "criadoEm_Assinaturas"
   }
 }, {
   tableName: "Assinaturas",

@@ -3,77 +3,96 @@ import { DataTypes } from "sequelize";
 import { db } from "./database.js";
 
 const Emprestimos = db.define("Emprestimos", {
-  uuid_Emprestimos: {
+  Emprestimos_id: {
     type: DataTypes.STRING(36),
     primaryKey: true,
-    allowNull: false
+    allowNull: false,
+    field: "uuid_Emprestimos"
   },
 
-  uuid_Usuario: {
+  Usuarios_id: {
     type: DataTypes.STRING(36),
-    allowNull: false
+    allowNull: false,
+    field: "uuid_Usuarios"
   },
 
-  uuid_Cliente: {
+  Clientes_id: {
     type: DataTypes.STRING(36),
-    allowNull: false
+    allowNull: false,
+    field: "uuid_Clientes"
   },
 
-  data_Emprestimos: {
+  data: {
     type: DataTypes.DATEONLY,
-    allowNull: false
+    allowNull: false,
+    field: "data_Emprestimos"
   },
 
-  data_pagamento_Emprestimos: {
+  data_pagamento: {
     type: DataTypes.DATEONLY,
-    allowNull: true
+    allowNull: true,
+    field: "data_pagamento_Emprestimos"
   },
 
-  valor_Emprestimos: {
+  valor: {
     type: DataTypes.FLOAT,
-    allowNull: false
+    allowNull: false,
+    field: "valor_Emprestimos"
   },
 
-  juros_Emprestimos: {
+  juros: {
     type: DataTypes.STRING(6),
-    allowNull: false
+    allowNull: false,
+    field: "juros_Emprestimos"
   },
 
-  quantidade_parcelas_Emprestimos: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-
-  quantidade_parcelas_usadas_Emprestimos: {
+  quantidade_parcelas: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 0
+    field: "quantidade_parcelas_Emprestimos"
   },
 
-  tipo_juros_Emprestimos: {
+  quantidade_parcelas_usadas: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    field: "quantidade_parcelas_usadas_Emprestimos"
+  },
+
+  tipo_juros: {
     type: DataTypes.STRING(8),
-    allowNull: false
+    allowNull: false,
+    field: "tipo_juros_Emprestimos"
   },
 
-  parcela_Emprestimos: {
+  parcela: {
     type: DataTypes.FLOAT,
-    allowNull: false
+    allowNull: false,
+    field: "parcela_Emprestimos"
   },
 
-  status_Emprestimos: {
+  status: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    defaultValue: "pendente"
+    defaultValue: "pendente",
+    field: "status_Emprestimos"
   },
 
-  observacao_Emprestimos: {
+  observacao: {
     type: DataTypes.STRING(200),
-    allowNull: true
+    allowNull: true,
+    field: "observacao_Emprestimos"
   },
-  criado_em_Emprestimos: {
+  criado_em: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW
+    defaultValue: DataTypes.NOW,
+    field: "criado_em_Emprestimos"
+  },
+  data_final: {
+    type: DataTypes.DATEONLY,
+    allowNull: false,
+    field: "data_final_Emprestimos"
   }
 
 }, {

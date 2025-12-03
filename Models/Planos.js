@@ -2,27 +2,32 @@ import { DataTypes } from "sequelize";
 import { db } from "./database.js";
 
 export const Planos = db.define("Planos", {
-  uuid_Planos: {
+  Planos_id: {
     type: DataTypes.STRING(36),
     allowNull: false,
-    primaryKey: true
+    primaryKey: true,
+    field: "uuid_Planos"
   },
-  titulo_Planos: {
+  titulo: {
     type: DataTypes.STRING(70),
-    allowNull: true
+    allowNull: true,
+    field: "titulo_Planos"
   },
-  valor_Planos: {
+  valor: {
     type: DataTypes.FLOAT,
-    allowNull: false
+    allowNull: false,
+    field: "valor_Planos"
   },
-  cobrado_em_Planos: {
+  cobrado_em: {
     type: DataTypes.STRING(100),
-    allowNull: false
+    allowNull: false,
+    field: "cobrado_em_Planos"
   },
-  criado_em_Planos: {
+  criado_em: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW
+    defaultValue: DataTypes.NOW,
+    field: "criado_em_Planos"
   }
 }, {
   tableName: "Planos",
