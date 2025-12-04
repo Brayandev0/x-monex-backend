@@ -162,7 +162,7 @@ export async function validarCadastroCliente(dados) {
     const status = dados.status?.[0];
     const indicacaoGrau = dados.indicacaoGrau?.[0];
     const score = dados.score?.[0];
-
+    console.log("status : ",status);
     if (score !== undefined && (isNaN(Number(score)) || Number(score) < 0 || Number(score) > 50)) {
       return { valido: false, mensagem: "Score inválido" };
     }

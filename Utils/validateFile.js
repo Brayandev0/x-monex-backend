@@ -273,6 +273,10 @@ export function validarDocumento(name) {
 
 export async function validarDocumentoArquivo(campos) {
   var erro = {};
+  if(!campos.indicacao || !campos.cpf){
+    erro.mensagem = "Campos obrigatórios ausentes";
+    return { erro: true, mensagem: "Campos obrigatórios ausentes" };
+  }
   console.log("Validando cadastro para campos:", campos.indicacao[0], campos.cpf[0]);
   const [validacao, parcelasVencidas, indicacao, clienteCpf] = await Promise.all([
       validarCadastroCliente(campos),

@@ -46,6 +46,7 @@ export async function cadastrarClienteController(req, res) {
 
 export async function retornarClientesController(req, res) {
   try {
+    const data = req.data;
 
     return res.status(200).json({ code: 200, clientes: data });
   } catch (error) {
@@ -112,7 +113,7 @@ export async function retornarEmprestimosController(req, res) {
   try {
     const data = req.data;
     const uuid = req.uuid;
-    const emprestimos = await buscarEmprestimosClientes({}, uuid);
+    const emprestimos = await buscarEmprestimosClientes(uuid,{});
 
     return res
       .status(200)

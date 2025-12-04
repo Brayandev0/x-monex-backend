@@ -45,8 +45,7 @@ export async function BuscarEmprestimosVencidos(uuid_Clientes) {
   });
 }
 
-export async function buscarEmprestimosClientes({
-  where = {Usuarios_id: uuidUsuario},
+export async function buscarEmprestimosClientes(uuidUsuario,{
   attributes = [
     "Emprestimos_id",
     "Clientes_id",
@@ -56,7 +55,8 @@ export async function buscarEmprestimosClientes({
     "data_final_Emprestimos",
   ],
   order = [["data", "DESC"]],
-} = {},uuidUsuario) {
+  where = {Usuarios_id: uuidUsuario},
+} = {}) {
   return await Emprestimos.findAll({
     attributes,
     where,
@@ -118,7 +118,20 @@ export async function buscarEmprestimosUuidHash(uuid_Emprestimos, Usuarios_id) {
           "tag"
 
         ],
+      },      {
+        model: Parcelas,
+        as: "DatasParcelas",
+        attributes: [
+          "Parcelas_id",
+          "Clientes_id",
+          "status",
+          "valor",
+          "vencimento",
+          "pagamento",
+          "numero",
+        ], // fields necessários apenas
       },
+
     ],
   });
 }
