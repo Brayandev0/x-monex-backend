@@ -1,5 +1,6 @@
 import {
   buscarUuidClientes,
+  buscarUuidClientesIndicacao,
   retornarTodosClientesPublic,
   retornarTodosClientesSelect,
 } from "../Cruds/Clientes.js";
@@ -63,10 +64,11 @@ export async function cadastrarClienteMiddleware(req, res, next) {
 export async function retornarClientesMiddleware(req, res, next) {
   try {
     const unico = req.query.unico;
+    const uuid = req.uuid;
     if (!unico) {
-      var data = await retornarTodosClientesPublic();
+      var data = await retornarTodosClientesPublic(uuid);
     } else {
-      var data = await retornarTodosClientesSelect(unico);
+      var data = await retornarTodosClientesSelect(uuid);
     }
 
     req.data = data;
@@ -76,21 +78,6 @@ export async function retornarClientesMiddleware(req, res, next) {
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
 }
-/*
-{
-  cliente_id: "ca4170bf-3274-4d55-ab01-252297c97761", // UUID
-  data_emprestimo: "2024-01-15", // formato YYYY-MM-DD
-  data_pagamento: "2024-12-15", // formato YYYY-MM-DD
-  valor: 1000.00, // float/decimal
-  taxa_juros: 5.5, // float/decimal
-  tipo_juros: "simples", // string
-  quantidade_parcelas: 12, // integer
-  parcelas_pagas: 0, // integer
-  valor_parcela: 83.33, // float/decimal (calculado)
-  status: "ativo", // string
-  observacao: "Texto da observação" // string
-}
-*/
 
 export async function cadastrarEmpestimosMiddleware(req, res, next) {
   try {
@@ -190,5 +177,78 @@ export async function verEmprestimosMiddleware(req,res,next) {
     console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
+  
+}
+
+export async function verClientesUuidMiddleware(req,res,next) {
+  try {
+    const uuid = req.params.uuid;
+    const uuidUsuario = req.uuid;
+    
+    if(!uuid || !validar_UUID_V4(uuid)){
+      return res.status(400).json({ msg: "UUID inválido", code: 400 });
+    }
+
+    const clientes = await buscarUuidClientesIndicacao(uuid, uuidUsuario);
+    if(!clientes){
+      return res.status(404).json({ msg: "Cliente não encontrado", code: 404 });
+    }
+    req.data = clientes;
+
+    const clientesJson = JSON.parse(JSON.stringify(clientes));
+
+    var {cpf,byte,tag} = clientesJson
+    cpf = descriptografarDadosAES(cpf,byte,tag)
+    clientesJson.cpf = cpf;
+    delete clientesJson.byte;
+    delete clientesJson.tag;
+    req.data = clientesJson;
+    next();
+
+  }catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+  
+}
+
+export async function deletarClientesMiddleware(req,res,next) {
+  try {
+    const uuid = req.params.uuid;
+    
+    if(!uuid || !validar_UUID_V4(uuid)){
+      return res.status(400).json({ msg: "UUID inválido", code: 400 });
+    }
+    
+    req.uuidCliente = uuid;
+    next();
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+  
+}
+
+export async function deletarEmprestimosMiddleware(req,res,next) {
+  try {
+    const uuid = req.params.uuid;
+    
+    if(!uuid || !validar_UUID_V4(uuid)){
+      return res.status(400).json({ msg: "UUID inválido", code: 400 });
+    }
+    
+    req.uuidEmprestimo = uuid;
+    next();
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+  
+}
+
+export async function atualizarEmprestimosMiddleware(req,res,next) {
+  
   
 }

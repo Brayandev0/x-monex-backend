@@ -1,8 +1,13 @@
 import express from "express";
 import {
+  cadastrarClienteMiddleware,
   cadastrarEmpestimosMiddleware,
+  deletarClientesMiddleware,
+  deletarEmprestimosMiddleware,
   LoginMiddleware,
   retornarClientesMiddleware,
+    verClientesUuidMiddleware,
+    
   verEmprestimosMiddleware,
 } from "../Middlewares/Usuario.js";
 import {
@@ -12,14 +17,20 @@ import {
   retornarClientesController,
   retornarEmprestimosController,
   verEmprestimosController,
+  verClientesUuidController,
+  deletarClientesController,
+  deletarEmprestimosController
 } from "../Controllers/Usuario.js";
 import { AuthMiddleware } from "../Middlewares/Auth.js";
+import multer from "multer";
+import formidable from "formidable";
 
 const UsuarioRouter = express.Router();
 
 UsuarioRouter.use(AuthMiddleware);
 
 UsuarioRouter.get("/clientes",retornarClientesMiddleware,retornarClientesController);
+UsuarioRouter.get("/clientes/:uuid",verClientesUuidMiddleware,verClientesUuidController);
 UsuarioRouter.get("/emprestimos",retornarEmprestimosController);
 UsuarioRouter.get("/emprestimos/:uuid",verEmprestimosMiddleware,verEmprestimosController);
 
@@ -27,5 +38,11 @@ UsuarioRouter.get("/emprestimos/:uuid",verEmprestimosMiddleware,verEmprestimosCo
 UsuarioRouter.post("/login", LoginMiddleware, LoginUsuarioController);
 UsuarioRouter.post("/clientes", cadastrarClienteController);
 UsuarioRouter.post("/emprestimos",cadastrarEmpestimosMiddleware, cadastrarEmpestimosController)
+
+UsuarioRouter.put("/emprestimos/:uuid",cadastrarClienteMiddleware,cadastrarClienteController)
+
+UsuarioRouter.delete("/clientes/:uuid",deletarClientesMiddleware,deletarClientesController)
+UsuarioRouter.delete("/emprestimos/:uuid",deletarEmprestimosMiddleware,deletarEmprestimosController)
+
 
 export default UsuarioRouter;

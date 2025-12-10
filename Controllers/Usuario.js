@@ -1,7 +1,8 @@
-import { retornarTodosClientesPublic } from "../Cruds/Clientes.js";
+import { deletarClientesUuid, retornarTodosClientesPublic } from "../Cruds/Clientes.js";
 import {
   buscarEmprestimosClientes,
   CadastrarEmprestimos,
+  deletarEmprestimosUuid,
 } from "../Cruds/Emprestimos.js";
 import { verEmprestimosMiddleware } from "../Middlewares/Usuario.js";
 import { gerarToken } from "../Utils/AuthToken.js";
@@ -27,15 +28,21 @@ export async function LoginUsuarioController(req, res) {
 export async function cadastrarClienteController(req, res) {
   try {
     const uuid = req.uuid;
-
-    if (req.headers["content-type"]) {
-      const tudo = await UploadFiles(req, "documento", uuid);
-      console.log(tudo);
-
-      return res
-        .json({ msg: "Cliente cadastrado com sucesso", code: 201 })
-        .status(201);
+    console.log("Arquivos : ", req.files);
+    const contentType = req.headers["content-type"];
+    if (!contentType || !contentType.includes("multipart/form-data")) {
+      return res.status(400).json({
+        msg: "Content-Type deve ser multipart/form-data",
+        code: 400,
+      });
     }
+
+    const tudo = await UploadFiles(req, "documento", uuid);
+    console.log(tudo);
+
+    return res
+      .json({ msg: "Cliente cadastrado com sucesso", code: 201 })
+      .status(201);
   } catch (error) {
     console.error(error);
     if (error.mensagem)
@@ -113,15 +120,13 @@ export async function retornarEmprestimosController(req, res) {
   try {
     const data = req.data;
     const uuid = req.uuid;
-    const emprestimos = await buscarEmprestimosClientes(uuid,{});
+    const emprestimos = await buscarEmprestimosClientes(uuid, {});
 
-    return res
-      .status(200)
-      .json({
-        code: 200,
-        msg: "Emprestimos retornados com sucesso",
-        emprestimos: emprestimos,
-      });
+    return res.status(200).json({
+      code: 200,
+      msg: "Emprestimos retornados com sucesso",
+      emprestimos: emprestimos,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
@@ -132,13 +137,59 @@ export async function verEmprestimosController(req, res) {
   try {
     const data = req.data;
 
+    return res.status(200).json({
+      code: 200,
+      msg: "Empréstimos retornados com sucesso",
+      emprestimos: data,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+export async function verClientesUuidController(req, res) {
+  try {
+    const data = req.data;
+
+    return res.status(200).json({
+      code: 200,
+      msg: "Clientes retornados com sucesso",
+      clientes: data,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+export async function deletarClientesController(req, res) {
+  try {
+    const uuid = req.uuid;
+    const uuidCliente = req.uuidCliente;
+
+    await deletarClientesUuid(uuidCliente, uuid);
+
     return res
       .status(200)
-      .json({
-        code: 200,
-        msg: "Empréstimos retornados com sucesso",
-        emprestimos: data,
-      });
+      .json({ msg: "Cliente deletado com sucesso", code: 200 });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+
+export async function deletarEmprestimosController(req, res) {  
+  try {
+    const uuid = req.uuid;
+    const uuidEmprestimo = req.uuidEmprestimo;
+
+    await deletarEmprestimosUuid(uuidEmprestimo, uuid);
+
+    return res
+      .status(200)
+      .json({ msg: "Empréstimo deletado com sucesso", code: 200 });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });

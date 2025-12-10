@@ -135,3 +135,13 @@ export async function buscarEmprestimosUuidHash(uuid_Emprestimos, Usuarios_id) {
     ],
   });
 }
+
+
+export async function deletarEmprestimosUuid(uuid_Emprestimos, Usuarios_id) {
+  return await Emprestimos.destroy({
+    where: {
+      Emprestimos_id: uuid_Emprestimos,
+      Usuarios_id: Usuarios_id,
+    },
+  });
+}

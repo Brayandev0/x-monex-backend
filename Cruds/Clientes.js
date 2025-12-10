@@ -1,3 +1,4 @@
+import { Op, or } from "sequelize";
 import { Clientes } from "../Models/Clientes.js";
 import { Indicacoes } from "../Models/Indicacoes.js";
 import { geraruuid } from "../Utils/gerador.js";
@@ -5,6 +6,7 @@ import { geraruuid } from "../Utils/gerador.js";
 export async function cadastrarCliente(dados) {
   const {
     indicacao,
+    uuid_Clientes,
     nome_Clientes,
     cpf,
     telefone,
@@ -24,13 +26,14 @@ export async function cadastrarCliente(dados) {
     iv,
     tag,
     status,
+    score,
+    Dono_id
   } = dados;
 
-  console.log(dados);
-
   return await Clientes.create({
-    Clientes_id: await geraruuid(),
+    Clientes_id: uuid_Clientes ? uuid_Clientes : await geraruuid(),
     indicacoes: indicacao,
+    Dono_id: Dono_id,
     nome: nome_Clientes,
     cpf: cpf,
     telefone: telefone,
@@ -50,7 +53,7 @@ export async function cadastrarCliente(dados) {
     byte: iv,
     tag: tag,
     status: status,
-    score: dados.score !== undefined ? dados.score : undefined,
+    score: score ? score : 0,
   });
 }
 export async function buscarUuidClientes(uuid_Clientes) {
@@ -58,35 +61,49 @@ export async function buscarUuidClientes(uuid_Clientes) {
     where: { Clientes_id: uuid_Clientes },
   });
 }
-
-export async function buscarClientesCpf(cpf) {
+export async function buscarUuidClientesIndicacao(uuid_Clientes, uuid_Usuario) {
   return await Clientes.findOne({
-    where: { cpf: cpf },
+    where: { Clientes_id: uuid_Clientes, uuid_Usuario: uuid_Usuario },
+    include: [
+      {
+        model: Indicacoes,
+        as: "IndicacaoRecebida", // a indicação recebida por este cliente
+        attributes: { exclude: ["id", "cpf", "uuid_Cliente_Indicacoes"] },
+      },
+    ],
+  });
+}
+export async function buscarClientesCpfTelefone(cpf, telefone) {
+  return await Clientes.findOne({
+    where: { [Op.or]: [{ cpf: cpf }, { telefone: telefone }] },
   });
 }
 
-export async function retornarTodosClientesPublic() {
+export async function retornarTodosClientesPublic(uuid_Usuario) {
   return await Clientes.findAll({
     attributes: {
       exclude: ["valor_solicitado", "byte", "tag", "cpf"],
     },
-    where:{
-
-    },
+    where: { uuid_Usuario: uuid_Usuario },
     include: [
       {
         model: Indicacoes,
-        as: "IndicacaoRecebida",  // a indicação recebida por este cliente
-        attributes:{exclude:["id","cpf","uuid_Cliente_Indicacoes"]}
-      }
-    ]
+        as: "IndicacaoRecebida", // a indicação recebida por este cliente
+        attributes: { exclude: ["id", "cpf", "uuid_Cliente_Indicacoes"] },
+      },
+    ],
   });
 }
 
-
-export async function retornarTodosClientesSelect() {
+export async function retornarTodosClientesSelect(uuid) {
   return await Clientes.findAll({
-    attributes: ['Clientes_id', 'nome', 'telefone',"status"],
+    attributes: ["Clientes_id", "nome", "telefone", "status"],
+    where:{ uuid_Usuario: uuid}
+  });
+}
 
+export async function deletarClientesUuid(uuid_Clientes,uuid_Usuario) {
+  return await Clientes.destroy({
+    where: { Clientes_id: uuid_Clientes },
   });
 }

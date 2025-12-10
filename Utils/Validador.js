@@ -146,7 +146,6 @@ export function validarTelefone(telefone) {
 
 export async function validarCadastroCliente(dados) {
   try {
-    console.log(dados);
     
     // ✅ Acessar [0] para todos os campos
     const nome = dados.nome?.[0];
@@ -213,7 +212,7 @@ export async function validarCadastroCliente(dados) {
       return { valido: false, mensagem: "Nome dos pais inválido" };
     }
     
-    if (!indicacao || !validar_UUID_V4(indicacao) || indicacaoBox !== "true") {
+    if (!indicacao || !validar_UUID_V4(indicacao) ) {
       return { valido: false, mensagem: "indicação inválida" };
     }
     
@@ -268,14 +267,7 @@ export async function validarCadastroCliente(dados) {
       }
     }
 
-    if (comprovacaoTipo === "carteira") {
-      if (!arquivos || !arquivos.comprovanteCarteira) {
-        return {
-          valido: false,
-          mensagem: "Comprovante de carteira não enviado",
-        };
-      }
-    }
+
 
     const enderecoPais = {
       rua: dados["enderecoPais.rua"]?.[0],
