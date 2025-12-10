@@ -63,7 +63,7 @@ export async function buscarUuidClientes(uuid_Clientes) {
 }
 export async function buscarUuidClientesIndicacao(uuid_Clientes, uuid_Usuario) {
   return await Clientes.findOne({
-    where: { Clientes_id: uuid_Clientes, uuid_Usuario: uuid_Usuario },
+    where: { Clientes_id: uuid_Clientes, Dono_id: uuid_Usuario },
     include: [
       {
         model: Indicacoes,
@@ -84,7 +84,7 @@ export async function retornarTodosClientesPublic(uuid_Usuario) {
     attributes: {
       exclude: ["valor_solicitado", "byte", "tag", "cpf"],
     },
-    where: { uuid_Usuario: uuid_Usuario },
+    where: { Dono_id: uuid_Usuario },
     include: [
       {
         model: Indicacoes,
@@ -98,12 +98,14 @@ export async function retornarTodosClientesPublic(uuid_Usuario) {
 export async function retornarTodosClientesSelect(uuid) {
   return await Clientes.findAll({
     attributes: ["Clientes_id", "nome", "telefone", "status"],
-    where:{ uuid_Usuario: uuid}
+    where:{ Dono_id: uuid}
   });
 }
 
 export async function deletarClientesUuid(uuid_Clientes,uuid_Usuario) {
   return await Clientes.destroy({
-    where: { Clientes_id: uuid_Clientes },
+    where: { Clientes_id: uuid_Clientes,
+      Dono_id: uuid_Usuario
+    },
   });
 }

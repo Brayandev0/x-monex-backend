@@ -4,9 +4,15 @@ import {
   retornarTodosClientesPublic,
   retornarTodosClientesSelect,
 } from "../Cruds/Clientes.js";
-import { buscarEmprestimosClientes, buscarEmprestimosUuidHash } from "../Cruds/Emprestimos.js";
+import {
+  buscarEmprestimosClientes,
+  buscarEmprestimosUuidHash,
+} from "../Cruds/Emprestimos.js";
 import { buscarEmail } from "../Cruds/Usuarios.js";
-import { compararDados, descriptografarDadosAES } from "../Utils/Criptografar.js";
+import {
+  compararDados,
+  descriptografarDadosAES,
+} from "../Utils/Criptografar.js";
 import { UploadFiles } from "../Utils/Upload.js";
 import { validar_UUID_V4, validarEmail } from "../Utils/Validador.js";
 
@@ -93,162 +99,322 @@ export async function cadastrarEmpestimosMiddleware(req, res, next) {
       valor_parcela,
       status,
       observacao,
-      data_final
+      data_final,
     } = req.body;
 
-    if(!id || !data || !data_Pag || !valor || !taxa_juros || !tipo_juros || !quantidade_parcelas || parcelas_pagas===undefined || !valor_parcela || !status){
-      return  res.status(400).json({ msg: "Campos obrigatórios não foram preenchidos", code: 400 });
+    if (
+      !id ||
+      !data ||
+      !data_Pag ||
+      !valor ||
+      !taxa_juros ||
+      !tipo_juros ||
+      !quantidade_parcelas ||
+      parcelas_pagas === undefined ||
+      !valor_parcela ||
+      !status
+    ) {
+      return res
+        .status(400)
+        .json({ msg: "Campos obrigatórios não foram preenchidos", code: 400 });
     }
-    if(!data_final){
-      return  res.status(400).json({ msg: "Data final do empréstimo é obrigatória", code: 400 });
+    if (!data_final) {
+      return res
+        .status(400)
+        .json({ msg: "Data final do empréstimo é obrigatória", code: 400 });
     }
-    if(Date.parse(data_final) === NaN){
-      return res.status(400).json({ msg: "Data final do empréstimo inválida", code: 400 });
+    if (Date.parse(data_final) === NaN) {
+      return res
+        .status(400)
+        .json({ msg: "Data final do empréstimo inválida", code: 400 });
     }
-    if(!validar_UUID_V4(id)){
+    if (!validar_UUID_V4(id)) {
       return res.status(400).json({ msg: "ID do cliente inválido", code: 400 });
     }
-    if(isNaN(Number(valor)) || Number(valor) <=0){
-      return res.status(400).json({ msg: "Valor do empréstimo inválido", code: 400 });
+    if (isNaN(Number(valor)) || Number(valor) <= 0) {
+      return res
+        .status(400)
+        .json({ msg: "Valor do empréstimo inválido", code: 400 });
     }
-    if(isNaN(Number(taxa_juros)) || Number(taxa_juros) <0){
+    if (isNaN(Number(taxa_juros)) || Number(taxa_juros) < 0) {
       return res.status(400).json({ msg: "Taxa de juros inválida", code: 400 });
     }
-    if(!["simples","composto"].includes(tipo_juros)){
+    if (!["simples", "composto"].includes(tipo_juros)) {
       return res.status(400).json({ msg: "Tipo de juros inválido", code: 400 });
     }
-    if(Date.parse(data) === NaN){
-      return res.status(400).json({ msg: "Data de empréstimo inválida", code: 400 });
+    if (Date.parse(data) === NaN) {
+      return res
+        .status(400)
+        .json({ msg: "Data de empréstimo inválida", code: 400 });
     }
-    if(Date.parse(data_Pag) === NaN){
-      return res.status(400).json({ msg: "Data de pagamento inválida", code: 400 });
+    if (Date.parse(data_Pag) === NaN) {
+      return res
+        .status(400)
+        .json({ msg: "Data de pagamento inválida", code: 400 });
     }
-    if(isNaN(Number(quantidade_parcelas)) || Number(quantidade_parcelas) <=0){
-      return res.status(400).json({ msg: "Quantidade de parcelas inválida", code: 400 });
+    if (
+      isNaN(Number(quantidade_parcelas)) ||
+      Number(quantidade_parcelas) <= 0
+    ) {
+      return res
+        .status(400)
+        .json({ msg: "Quantidade de parcelas inválida", code: 400 });
     }
-    if(isNaN(Number(parcelas_pagas)) || Number(parcelas_pagas) <0){
-      return res.status(400).json({ msg: "Parcelas pagas inválida", code: 400 });
+    if (isNaN(Number(parcelas_pagas)) || Number(parcelas_pagas) < 0) {
+      return res
+        .status(400)
+        .json({ msg: "Parcelas pagas inválida", code: 400 });
     }
-    if(isNaN(Number(valor_parcela)) || Number(valor_parcela) <=0){
-      return res.status(400).json({ msg: "Valor da parcela inválida", code: 400 });
+    if (isNaN(Number(valor_parcela)) || Number(valor_parcela) <= 0) {
+      return res
+        .status(400)
+        .json({ msg: "Valor da parcela inválida", code: 400 });
     }
-    if(!["ativo","inativo","quitado"].includes(status)){
+    if (!["ativo", "inativo", "quitado"].includes(status)) {
       return res.status(400).json({ msg: "Status inválido", code: 400 });
     }
-    if(observacao && observacao.length > 500){
+    if (observacao && observacao.length > 500) {
       return res.status(400).json({ msg: "Observação muito longa", code: 400 });
     }
     const clienteData = await buscarUuidClientes(id);
-    if(!clienteData){
+    if (!clienteData) {
       return res.status(404).json({ msg: "Cliente não encontrado", code: 404 });
     }
 
     next();
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
 }
 
-
-export async function verEmprestimosMiddleware(req,res,next) {
+export async function verEmprestimosMiddleware(req, res, next) {
   try {
     const uuid = req.params.uuid;
 
-    const uuidUsuario =  req.uuid;
-    if(!uuid || !validar_UUID_V4(uuid)){
+    const uuidUsuario = req.uuid;
+    if (!uuid || !validar_UUID_V4(uuid)) {
       return res.status(400).json({ msg: "UUID inválido", code: 400 });
     }
     req.uuid = uuid;
 
-    var emprestimos = await buscarEmprestimosUuidHash(uuid,uuidUsuario);
+    var emprestimos = await buscarEmprestimosUuidHash(uuid, uuidUsuario);
     emprestimos = JSON.parse(JSON.stringify(emprestimos));
 
-    var {cpf,byte,tag} = emprestimos.clientesEmprestimos
-    cpf = descriptografarDadosAES(cpf,byte,tag)
+    var { cpf, byte, tag } = emprestimos.clientesEmprestimos;
+    cpf = descriptografarDadosAES(cpf, byte, tag);
     emprestimos.clientesEmprestimos.cpf = cpf;
     delete emprestimos.clientesEmprestimos.byte;
     delete emprestimos.clientesEmprestimos.tag;
     req.data = emprestimos;
     next();
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
-  
 }
 
-export async function verClientesUuidMiddleware(req,res,next) {
+export async function verClientesUuidMiddleware(req, res, next) {
   try {
     const uuid = req.params.uuid;
     const uuidUsuario = req.uuid;
-    
-    if(!uuid || !validar_UUID_V4(uuid)){
+
+    if (!uuid || !validar_UUID_V4(uuid)) {
       return res.status(400).json({ msg: "UUID inválido", code: 400 });
     }
 
     const clientes = await buscarUuidClientesIndicacao(uuid, uuidUsuario);
-    if(!clientes){
+    if (!clientes) {
       return res.status(404).json({ msg: "Cliente não encontrado", code: 404 });
     }
     req.data = clientes;
 
     const clientesJson = JSON.parse(JSON.stringify(clientes));
 
-    var {cpf,byte,tag} = clientesJson
-    cpf = descriptografarDadosAES(cpf,byte,tag)
+    var { cpf, byte, tag } = clientesJson;
+    cpf = descriptografarDadosAES(cpf, byte, tag);
     clientesJson.cpf = cpf;
     delete clientesJson.byte;
     delete clientesJson.tag;
     req.data = clientesJson;
     next();
-
-  }catch (error) {
+  } catch (error) {
     console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
-  
 }
 
-export async function deletarClientesMiddleware(req,res,next) {
+export async function deletarClientesMiddleware(req, res, next) {
   try {
     const uuid = req.params.uuid;
-    
-    if(!uuid || !validar_UUID_V4(uuid)){
+
+    if (!uuid || !validar_UUID_V4(uuid)) {
       return res.status(400).json({ msg: "UUID inválido", code: 400 });
     }
-    
+
     req.uuidCliente = uuid;
     next();
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
-  
 }
 
-export async function deletarEmprestimosMiddleware(req,res,next) {
+export async function deletarEmprestimosMiddleware(req, res, next) {
   try {
     const uuid = req.params.uuid;
-    
-    if(!uuid || !validar_UUID_V4(uuid)){
+
+    if (!uuid || !validar_UUID_V4(uuid)) {
       return res.status(400).json({ msg: "UUID inválido", code: 400 });
     }
-    
+
     req.uuidEmprestimo = uuid;
     next();
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
-  
 }
+/*
+{
+  "id": "e162cdaf-518f-4727-afde-9e016bf0e3eb",
+  "data": "2024-01-15",
+  "data_Pag": "2024-12-15",
+  "valor": 1000.00,
+  "taxa_juros": 5.5,
+  "tipo_juros": "simples",
+  "quantidade_parcelas": 12,
+  "parcelas_pagas": 0,
+  "valor_parcela": 83.33,
+  "status": "ativo",
+  "observacao": "Observações sobre o empréstimo",
+  "data_final":"2025-7-23"
+}
+*/
+export async function atualizarEmprestimosMiddleware(req, res, next) {
+  try {
+    const {
+      id,
+      data,
+      data_Pag,
+      valor,
+      taxa_juros,
+      tipo_juros,
+      quantidade_parcelas,
+      parcelas_pagas,
+      valor_parcela,
+      status,
+      observacao,
+      data_final,
+    } = req.body;
 
-export async function atualizarEmprestimosMiddleware(req,res,next) {
-  
-  
+    if (
+      !id &&
+      !data &&
+      !data_Pag &&
+      !valor &&
+      !taxa_juros &&
+      !tipo_juros &&
+      !quantidade_parcelas &&
+      parcelas_pagas === undefined &&
+      !valor_parcela &&
+      !status &&
+      !data_final
+    ) {
+      return res
+        .status(400)
+        .json({ msg: "Campos obrigatórios não foram preenchidos", code: 400 });
+    }
+    if (!validar_UUID_V4(id)) {
+      return res.status(400).json({ msg: "ID do cliente inválido", code: 400 });
+    }
+    if (valor) {
+      if (isNaN(Number(valor)) || Number(valor) <= 0) {
+        return res
+          .status(400)
+          .json({ msg: "Valor do empréstimo inválido", code: 400 });
+      }
+    }
+    if (taxa_juros) {
+      if (isNaN(Number(taxa_juros)) || Number(taxa_juros) < 0) {
+        return res
+          .status(400)
+          .json({ msg: "Taxa de juros inválida", code: 400 });
+      }
+    }
+    if (tipo_juros) {
+      if (!["simples", "composto"].includes(tipo_juros)) {
+        return res
+          .status(400)
+          .json({ msg: "Tipo de juros inválido", code: 400 });
+      }
+    }
+    if (data) {
+      if (!Date.parse(data)) {
+        return res
+          .status(400)
+          .json({ msg: "Data de empréstimo inválida", code: 400 });
+      }
+    }
+    if (data_Pag) {
+      if (!Date.parse(data_Pag)) {
+        return res
+          .status(400)
+          .json({ msg: "Data de pagamento inválida", code: 400 });
+      }
+    }
+    if (quantidade_parcelas) {
+      if (
+        isNaN(Number(quantidade_parcelas)) ||
+        Number(quantidade_parcelas) <= 0
+      ) {
+        return res
+          .status(400)
+          .json({ msg: "Quantidade de parcelas inválida", code: 400 });
+      }
+    }
+    if (parcelas_pagas !== undefined) {
+      if (isNaN(Number(parcelas_pagas)) || Number(parcelas_pagas) < 0) {
+      return res
+        .status(400)
+        .json({ msg: "Parcelas pagas inválida", code: 400 });
+      }
+    }
+
+    if (valor_parcela !== undefined) {
+      if (isNaN(Number(valor_parcela)) || Number(valor_parcela) <= 0) {
+      return res
+        .status(400)
+        .json({ msg: "Valor da parcela inválida", code: 400 });
+      }
+    }
+
+    if (status !== undefined) {
+      if (!["ativo", "inativo", "quitado"].includes(status)) {
+      return res.status(400).json({ msg: "Status inválido", code: 400 });
+      }
+    }
+
+    if (observacao !== undefined) {
+      if (observacao.length > 500) {
+      return res.status(400).json({ msg: "Observação muito longa", code: 400 });
+      }
+    }
+
+    if (id !== undefined) {
+      if (!validar_UUID_V4(id)) {
+      return res.status(400).json({ msg: "ID do cliente inválido", code: 400 });
+      }
+      const clienteData = await buscarUuidClientes(id);
+      if (!clienteData) {
+      return res.status(404).json({ msg: "Cliente não encontrado", code: 404 });
+      }
+    }
+
+    next();
+    console.log(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }catch (error) {
+    
+  }
 }
