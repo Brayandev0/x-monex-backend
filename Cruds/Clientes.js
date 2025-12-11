@@ -73,9 +73,10 @@ export async function buscarUuidClientesIndicacao(uuid_Clientes, uuid_Usuario) {
     ],
   });
 }
-export async function buscarClientesCpfTelefone(cpf, telefone) {
+export async function buscarClientesCpfTelefone(cpf, telefone,uuidDono) {
   return await Clientes.findOne({
-    where: { [Op.or]: [{ cpf: cpf }, { telefone: telefone }] },
+    where: { [Op.or]: [{ cpf: cpf }, { telefone: telefone }],
+  Dono_id:uuidDono },
   });
 }
 

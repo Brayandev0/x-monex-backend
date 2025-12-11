@@ -105,7 +105,7 @@ export function limparCamposDocumento(campos, arquivos) {
 
 export async function uploadDocumento(campos, arquivos, uuidDono) {
   try {
-    const validaDocumento = await validarDocumentoArquivo(campos);
+    const validaDocumento = await validarDocumentoArquivo(campos,uuidDono);
 
     if (validaDocumento.erro || !validaDocumento.indicacao) {
       console.log("Validação de documento falhou:", validaDocumento);
@@ -280,7 +280,7 @@ export function validarDocumento(name, erro) {
   return true;
 }
 
-export async function validarDocumentoArquivo(campos) {
+export async function validarDocumentoArquivo(campos,donouuid) {
   var erro = {};
   if (!campos.indicacao || !campos.cpf) {
     erro.mensagem = "Campos obrigatórios ausentes";
@@ -290,8 +290,8 @@ export async function validarDocumentoArquivo(campos) {
     await Promise.all([
       validarCadastroCliente(campos),
       buscarParcelasVencidas(campos.indicacao[0]),
-      buscarUuidClientes(campos.indicacao[0]),
-      buscarClientesCpfTelefone(campos.cpf[0], campos.telefone[0]),
+      buscarUuidClientes(campos.indicacao[0],donouuid),
+      buscarClientesCpfTelefone(campos.cpf[0], campos.telefone[0],donouuid),
     ]);
     console.log("CLIENTE CPF: ", clienteCpf);
   if (clienteCpf) {

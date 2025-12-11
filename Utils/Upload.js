@@ -107,7 +107,6 @@ export async function UploadFiles(req, tipo, uuidDono) {
             campos,
             arquivos,
             uuidDono,
-            caminhoArquivo
           );
           console.log("Resultado : ", resultadoUpload);
           

@@ -199,9 +199,13 @@ export async function verEmprestimosMiddleware(req, res, next) {
     req.uuid = uuid;
 
     var emprestimos = await buscarEmprestimosUuidHash(uuid, uuidUsuario);
+    if(!emprestimos){
+      return res.status(404).json({msg:"Emprestimo nao encontrado",code:404})
+    }
     emprestimos = JSON.parse(JSON.stringify(emprestimos));
-
+    
     var { cpf, byte, tag } = emprestimos.clientesEmprestimos;
+    console.log(cpf,byte,tag)
     cpf = descriptografarDadosAES(cpf, byte, tag);
     emprestimos.clientesEmprestimos.cpf = cpf;
     delete emprestimos.clientesEmprestimos.byte;
@@ -232,6 +236,7 @@ export async function verClientesUuidMiddleware(req, res, next) {
     const clientesJson = JSON.parse(JSON.stringify(clientes));
 
     var { cpf, byte, tag } = clientesJson;
+    console.log(cpf,byte,tag)
     cpf = descriptografarDadosAES(cpf, byte, tag);
     clientesJson.cpf = cpf;
     delete clientesJson.byte;
@@ -445,7 +450,6 @@ export async function atualizarClientesMiddleware(req, res, next) {
     const {
       nome,
       telefone,
-      cpf,
       nomePai,
       nomeMae,
       indicacao,
@@ -467,7 +471,6 @@ export async function atualizarClientesMiddleware(req, res, next) {
     if (
       !nome &&
       !telefone &&
-      !cpf &&
       !nomePai &&
       !nomeMae &&
       !indicacao &&
@@ -510,16 +513,6 @@ export async function atualizarClientesMiddleware(req, res, next) {
           .json({ msg: "Telefone inválido", code: 400 });
       }
       ObjetoUpdate.telefone = telefone;
-    }
-
-    if (cpf) {
-      const cpfLimpo = cpf.replace(/\D/g, '');
-      if (!validarCPF(cpfLimpo)) {
-        return res
-          .status(400)
-          .json({ msg: "CPF inválido", code: 400 });
-      }
-      ObjetoUpdate.cpf = cpf;
     }
 
     if (nomePai || nomeMae) {
