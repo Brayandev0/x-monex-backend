@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true, limit: '200mb' }));
 
 app.use(VerificarApiKey);
 app.use(cors({
-  origin:["http://127.0.0.1:3000","http://localhost:3000"],
+  origin:["http://127.0.0.1:3000","http://localhost:3000","xmonex.createc.com.br","https://xmonex.createc.com.br"],
   credentials:true,
   methods:["GET","POST","PUT","DELETE"]
 }));
