@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  atualizarClientesMiddleware,
+  atualizarEmprestimosMiddleware,
   cadastrarClienteMiddleware,
   cadastrarEmpestimosMiddleware,
   deletarClientesMiddleware,
@@ -19,7 +21,9 @@ import {
   verEmprestimosController,
   verClientesUuidController,
   deletarClientesController,
-  deletarEmprestimosController
+  deletarEmprestimosController,
+  atualizarEmprestimosController,
+  atualizarClientesController
 } from "../Controllers/Usuario.js";
 import { AuthMiddleware } from "../Middlewares/Auth.js";
 import multer from "multer";
@@ -32,14 +36,15 @@ UsuarioRouter.use(AuthMiddleware);
 UsuarioRouter.get("/clientes",retornarClientesMiddleware,retornarClientesController);
 UsuarioRouter.get("/clientes/:uuid",verClientesUuidMiddleware,verClientesUuidController);
 UsuarioRouter.get("/emprestimos",retornarEmprestimosController);
-UsuarioRouter.get("/emprestimos/:uuid",verEmprestimosMiddleware,verEmprestimosController);
-
+UsuarioRouter.get("/emprestimos/:uuid",verEmprestimosMiddleware,verEmprestimosController)
 
 UsuarioRouter.post("/login", LoginMiddleware, LoginUsuarioController);
 UsuarioRouter.post("/clientes", cadastrarClienteController);
 UsuarioRouter.post("/emprestimos",cadastrarEmpestimosMiddleware, cadastrarEmpestimosController)
 
-UsuarioRouter.put("/emprestimos/:uuid",cadastrarClienteMiddleware,cadastrarClienteController)
+UsuarioRouter.put("/emprestimos/:uuid",atualizarEmprestimosMiddleware,atualizarEmprestimosController)
+UsuarioRouter.put("/clientes/:uuid",atualizarClientesMiddleware,atualizarClientesController)
+
 
 UsuarioRouter.delete("/clientes/:uuid",deletarClientesMiddleware,deletarClientesController)
 UsuarioRouter.delete("/emprestimos/:uuid",deletarEmprestimosMiddleware,deletarEmprestimosController)

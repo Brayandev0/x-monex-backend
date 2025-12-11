@@ -10,5 +10,7 @@ export let db = new Sequelize(
     host: process.env.DATABASE_HOST,
     port: process.env.DATABASE_PORT,
     dialect: "mysql",
-    logging: false
+    logging: false,
+    timezone: "+05:30",
+    
 })

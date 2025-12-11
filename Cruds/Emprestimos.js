@@ -145,3 +145,13 @@ export async function deletarEmprestimosUuid(uuid_Emprestimos, Usuarios_id) {
     },
   });
 }
+
+export async function atualizarEmprestimos(uuid_Emprestimos,donoUuid, data) {
+  return await Emprestimos.update(data, {
+    where: {
+      Emprestimos_id: uuid_Emprestimos,
+      Usuarios_id: donoUuid,
+    },
+  });
+  
+}

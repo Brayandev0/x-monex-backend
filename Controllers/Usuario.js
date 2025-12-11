@@ -1,5 +1,6 @@
-import { deletarClientesUuid, retornarTodosClientesPublic } from "../Cruds/Clientes.js";
+import { atualizarClientes, deletarClientesUuid, retornarTodosClientesPublic } from "../Cruds/Clientes.js";
 import {
+  atualizarEmprestimos,
   buscarEmprestimosClientes,
   CadastrarEmprestimos,
   deletarEmprestimosUuid,
@@ -194,4 +195,41 @@ export async function deletarEmprestimosController(req, res) {
     console.error(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
+}
+
+
+export async function atualizarEmprestimosController(req,res) {
+  try {
+    const uuidUsuario = req.uuid;
+    const objetoUpdate = req.ObjetoUpdate
+    const emprestimosUuid = req.uuidEmprestimo;
+
+    await atualizarEmprestimos(emprestimosUuid, uuidUsuario, objetoUpdate);
+
+    return res
+      .status(200)
+      .json({ msg: "Empréstimo atualizado com sucesso", code: 200 });
+    
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+  
+}
+
+export async function atualizarClientesController(req,res) {
+  try {
+    const uuidUsuario = req.uuid;
+    const objetoUpdate = req.ObjetoUpdate
+    const clientesUuid = req.uuidCliente;
+
+    await atualizarClientes(clientesUuid, uuidUsuario, objetoUpdate);
+
+    return res.status(200).json({ msg: "Cliente atualizado com sucesso", code: 200 });
+    
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+  
 }

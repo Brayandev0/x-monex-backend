@@ -56,9 +56,9 @@ export async function cadastrarCliente(dados) {
     score: score ? score : 0,
   });
 }
-export async function buscarUuidClientes(uuid_Clientes) {
+export async function buscarUuidClientes(uuid_Clientes, uuid_Usuario) {
   return await Clientes.findOne({
-    where: { Clientes_id: uuid_Clientes },
+    where: { Clientes_id: uuid_Clientes, Dono_id: uuid_Usuario },
   });
 }
 export async function buscarUuidClientesIndicacao(uuid_Clientes, uuid_Usuario) {
@@ -107,5 +107,14 @@ export async function deletarClientesUuid(uuid_Clientes,uuid_Usuario) {
     where: { Clientes_id: uuid_Clientes,
       Dono_id: uuid_Usuario
     },
+  });
+}
+
+export async function atualizarClientes(clientesUuid, uuidUsuario, objetoUpdate) {
+  return await Clientes.update(objetoUpdate, {
+    where: {
+      Clientes_id: clientesUuid,
+      Dono_id: uuidUsuario
+    }
   });
 }
