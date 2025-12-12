@@ -107,7 +107,7 @@ export async function uploadDocumento(campos, arquivos, uuidDono) {
   try {
     const validaDocumento = await validarDocumentoArquivo(campos,uuidDono);
 
-    if (validaDocumento.erro || !validaDocumento.indicacao) {
+    if (validaDocumento.erro ) {
       console.log("Validação de documento falhou:", validaDocumento);
       return validaDocumento; // CORRIGIDO: era resolve(), mas não estava dentro de Promise
     }
@@ -166,19 +166,19 @@ export async function uploadDocumento(campos, arquivos, uuidDono) {
 
     console.log("Objeto Cliente : ", objetoCliente);
 
-    const indicacaoCliente = validaDocumento.indicacao;
+    // const indicacaoCliente = validaDocumento.indicacao;
     
     const resultadoCadastro = await cadastrarCliente(objetoCliente);
 
-    await cadastrarIndicacoes(
-      indicacaoCliente.Clientes_id,
-      resultadoCadastro.Clientes_id,
-      indicacaoCliente.nome,
-      indicacaoCliente.cpf,
-      indicacaoCliente.telefone,
-      objetoCliente.indicacaoGrau,
-      objetoCliente.indicacaoBox === true ? "aprovado" : "pendente"
-    );
+    // await cadastrarIndicacoes(
+    //   indicacaoCliente.Clientes_id,
+    //   resultadoCadastro.Clientes_id,
+    //   indicacaoCliente.nome,
+    //   indicacaoCliente.cpf,
+    //   indicacaoCliente.telefone,
+    //   objetoCliente.indicacaoGrau,
+    //   objetoCliente.indicacaoBox === true ? "aprovado" : "pendente"
+    // );
 
     // Verificar se o cadastro retornou o UUID do cliente
     if (!resultadoCadastro || !resultadoCadastro.Clientes_id) {
@@ -282,15 +282,15 @@ export function validarDocumento(name, erro) {
 
 export async function validarDocumentoArquivo(campos,donouuid) {
   var erro = {};
-  if (!campos.indicacao || !campos.cpf) {
+  if (!campos.cpf) {
     erro.mensagem = "Campos obrigatórios ausentes";
     return { erro: true, mensagem: "Campos obrigatórios ausentes" };
   }
-  const [validacao, parcelasVencidas, indicacao, clienteCpf] =
+  const [validacao, parcelasVencidas, clienteCpf] =
     await Promise.all([
       validarCadastroCliente(campos),
       buscarParcelasVencidas(campos.indicacao[0]),
-      buscarUuidClientes(campos.indicacao[0],donouuid),
+      // buscarUuidClientes(campos.indicacao[0],donouuid),
       buscarClientesCpfTelefone(campos.cpf[0], campos.telefone[0],donouuid),
     ]);
     console.log("CLIENTE CPF: ", clienteCpf);
@@ -301,20 +301,20 @@ export async function validarDocumentoArquivo(campos,donouuid) {
       mensagem: "CPF já cadastrado ou telefone já cadastrado",
     };
   }
-  if (!indicacao) {
-    erro.mensagem = "Cliente indicacao não encontrado";
-    return { erro: true, mensagem: "Cliente indicacao nao encontrado" };
-  }
+  // if (!indicacao) {
+  //   erro.mensagem = "Cliente indicacao não encontrado";
+  //   return { erro: true, mensagem: "Cliente indicacao nao encontrado" };
+  // }
 
-  if (
-    indicacao.status === "pendente" ||
-    indicacao.status === "rejeitado" ||
-    indicacao.status === "cancelado" ||
-    indicacao.status === "inadimplente"
-  ) {
-    erro.mensagem = "Cliente indicacao não encontrado";
-    return { erro: true, mensagem: "Cliente inadimplente ou com desativado" };
-  }
+  // if (
+  //   indicacao.status === "pendente" ||
+  //   indicacao.status === "rejeitado" ||
+  //   indicacao.status === "cancelado" ||
+  //   indicacao.status === "inadimplente"
+  // ) {
+  //   erro.mensagem = "Cliente indicacao não encontrado";
+  //   return { erro: true, mensagem: "Cliente inadimplente ou com desativado" };
+  // }
   if (parcelasVencidas && parcelasVencidas.length > 0) {
     erro.mensagem =
       "O cliente indicado possui parcelas vencidas. Não é possível prosseguir com o cadastro.";
@@ -328,5 +328,7 @@ export async function validarDocumentoArquivo(campos,donouuid) {
     erro.mensagem = validacao.mensagem;
     return { erro: true, mensagem: validacao.mensagem };
   }
-  return { erro: false, indicacao: indicacao };
+  // return { erro: false, indicacao: indicacao };
+  return { erro: false };
+
 }
