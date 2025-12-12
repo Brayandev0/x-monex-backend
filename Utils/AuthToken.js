@@ -6,7 +6,7 @@ export async function gerarToken(uuid){
     return await jsonwebtoken.sign(
         {uuid:uuid},
         process.env.JWT_SECRET,
-        { expiresIn: '30d',algorithm: "HS256" }
+        { expiresIn: '7d',algorithm: "HS256" }
     )
 }
 
