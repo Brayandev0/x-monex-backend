@@ -8,7 +8,6 @@ export async function VerificarApiKey(req,res,next){
         const keyEnv = process.env.API_KEY;
 
         if(!apiKey || apiKey !== keyEnv || apiKey === undefined){
-            console.log("Sem api key", keyEnv.length, apiKey.length);
             return res.status(403).json({ msg: "Acesso não autorizado", code: 403 });
         }
         next();

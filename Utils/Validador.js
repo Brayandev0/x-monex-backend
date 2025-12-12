@@ -217,7 +217,7 @@ export async function validarCadastroCliente(dados) {
     }
     
     if (comprovacaoTipo !== "referencias" && comprovacaoTipo !== "carteira") {
-      return { valido: false, mensagem: "Tipo de comprovação inválida" };
+      comprovacaoTipo = "carteira"
     }
 
     if (!chavePix || !tipoChavePix) {
