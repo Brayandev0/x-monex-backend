@@ -170,9 +170,9 @@ export async function cadastrarEmpestimosMiddleware(req, res, next) {
         .status(400)
         .json({ msg: "Valor da parcela inválida", code: 400 });
     }
-    // if (!["ativo", "inativo", "quitado"].includes(status)) {
-    //   return res.status(400).json({ msg: "Status inválido", code: 400 });
-    // }
+    if (!["ativo", "inativo", "quitado"].includes(status)) {
+      return res.status(400).json({ msg: "Status inválido", code: 400 });
+    }
     if (observacao && observacao.length > 500) {
       return res.status(400).json({ msg: "Observação muito longa", code: 400 });
     }
