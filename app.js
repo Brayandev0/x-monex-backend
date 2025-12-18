@@ -37,7 +37,13 @@ app.use((req,res,error) => {
   console.error(error);
   return res.status(500).json({ msg: "Rota " + req.originalUrl + " não encontrada", code: 404 });
 })
-
+app.use((err, req, res, next) => {
+  console.error(err);
+  return res.status(500).json({ 
+    msg: "Um erro ocorreu ", 
+    code: 500 
+  });
+});
 
 db.sync()
 function chamarRotas(app) {

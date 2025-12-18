@@ -161,6 +161,8 @@ export async function validarCadastroCliente(dados) {
     const status = dados.status?.[0];
     const indicacaoGrau = dados.indicacaoGrau?.[0];
     const score = dados.score?.[0];
+    const cidade = dados.cidade?.[0]
+
     console.log("status : ",status);
     if (score !== undefined && (isNaN(Number(score)) || Number(score) < 0 || Number(score) > 50)) {
       return { valido: false, mensagem: "Score inválido" };
@@ -179,6 +181,9 @@ export async function validarCadastroCliente(dados) {
     }
     if (!cpf || !validarCPF(cpf)) {
       return { valido: false, mensagem: "CPF inválido" };
+    }
+    if(!cidade){
+      return {valido:false, mensagem:"Cidade invalida"}
     }
     
     const residencial = {

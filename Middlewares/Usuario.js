@@ -69,8 +69,8 @@ export async function cadastrarClienteMiddleware(req, res, next) {
 
 export async function retornarClientesMiddleware(req, res, next) {
   try {
-    const unico = req.query.unico;
     const uuid = req.uuid;
+    const unico = req.query.unico;
     if (!unico) {
       var data = await retornarTodosClientesPublic(uuid);
     } else {
@@ -299,6 +299,7 @@ export async function deletarEmprestimosMiddleware(req, res, next) {
 export async function atualizarEmprestimosMiddleware(req, res, next) {
   try {
     var ObjetoUpdate = {};
+    console.log("Corpo da requisição:", req.body);
     const {
       data,
       data_Pag,
@@ -400,7 +401,7 @@ export async function atualizarEmprestimosMiddleware(req, res, next) {
           .status(400)
           .json({ msg: "Valor da parcela inválida", code: 400 });
       }
-      ObjetoUpdate.valor_parcela = valor_parcela;
+      ObjetoUpdate.parcela = valor_parcela;
     }
 
     if (status) {
@@ -776,4 +777,61 @@ export async function atualizarClientesMiddleware(req, res, next) {
     console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
+}
+
+export async function ArquivarClientesMiddleware(req,res,next) {
+  try {
+    const uuidCliente = req.params.uuid
+    const uuid = req.uuid
+
+    if(!uuidCliente || !validar_UUID_V4(uuid)){
+      return res.status(400).json({msg:"Cliente informado invalido",code:400})
+    }
+    const cliente = await buscarUuidClientes(uuidCliente,uuid);
+
+    if(!cliente){
+      return res.status(400).json({msg:"Cliente nao encontrado",code:400})
+    }
+
+    next()
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({msg:"Um erro ocorreu",code:500})
+  }
+  
+}
+
+export async function cadastrarFuncionariosMiddleware(req,res,next) {
+  try {
+    const { nome, email, senha, nivel_permissao } = req.body;
+    const uuid = req.uuid;
+
+    if (!nome || !email || !senha || !nivel_permissao) {
+      return res.status(400).json({ msg: "Campos obrigatórios não foram preenchidos", code: 400 });
+    }
+    if (!validarEmail(email)) {
+      return res.status(400).json({ msg: "Email inválido", code: 400 });
+    }
+    if (senha.length < 4) {
+      return res
+        .status(400)
+        .json({ msg: "Senha deve ter no mínimo 4 caracteres", code: 400 });
+    }
+    if (isNaN(Number(nivel_permissao)) || Number(nivel_permissao) < 0 || Number(nivel_permissao) > 5) {
+      return res.status(400).json({ msg: "Nível de permissão inválido", code: 400 });
+    }
+    req.funcionarioData = {
+      nome,
+      email,
+      senha,
+      nivel_permissao,
+      id_dono: uuid
+    };
+    next();
+    
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({msg:"Um erro ocorreu",code:500})
+  }
+  
 }

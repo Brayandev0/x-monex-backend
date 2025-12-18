@@ -1,10 +1,16 @@
-import { atualizarClientes, deletarClientesUuid, retornarTodosClientesPublic } from "../Cruds/Clientes.js";
+import {
+  ArquivarClientes,
+  atualizarClientes,
+  deletarClientesUuid,
+  retornarTodosClientesPublic,
+} from "../Cruds/Clientes.js";
 import {
   atualizarEmprestimos,
   buscarEmprestimosClientes,
   CadastrarEmprestimos,
   deletarEmprestimosUuid,
 } from "../Cruds/Emprestimos.js";
+import { cadastrarFuncionarios } from "../Cruds/Funcionarios.js";
 import { verEmprestimosMiddleware } from "../Middlewares/Usuario.js";
 import { gerarToken } from "../Utils/AuthToken.js";
 import { UploadFiles } from "../Utils/Upload.js";
@@ -180,8 +186,7 @@ export async function deletarClientesController(req, res) {
   }
 }
 
-
-export async function deletarEmprestimosController(req, res) {  
+export async function deletarEmprestimosController(req, res) {
   try {
     const uuid = req.uuid;
     const uuidEmprestimo = req.uuidEmprestimo;
@@ -197,11 +202,10 @@ export async function deletarEmprestimosController(req, res) {
   }
 }
 
-
-export async function atualizarEmprestimosController(req,res) {
+export async function atualizarEmprestimosController(req, res) {
   try {
     const uuidUsuario = req.uuid;
-    const objetoUpdate = req.ObjetoUpdate
+    const objetoUpdate = req.ObjetoUpdate;
     const emprestimosUuid = req.uuidEmprestimo;
 
     await atualizarEmprestimos(emprestimosUuid, uuidUsuario, objetoUpdate);
@@ -209,23 +213,51 @@ export async function atualizarEmprestimosController(req,res) {
     return res
       .status(200)
       .json({ msg: "Empréstimo atualizado com sucesso", code: 200 });
-    
   } catch (error) {
     console.error(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
-  
 }
 
-export async function atualizarClientesController(req,res) {
+export async function atualizarClientesController(req, res) {
   try {
     const uuidUsuario = req.uuid;
-    const objetoUpdate = req.ObjetoUpdate
+    const objetoUpdate = req.ObjetoUpdate;
     const clientesUuid = req.uuidCliente;
 
     await atualizarClientes(clientesUuid, uuidUsuario, objetoUpdate);
 
-    return res.status(200).json({ msg: "Cliente atualizado com sucesso", code: 200 });
+    return res
+      .status(200)
+      .json({ msg: "Cliente atualizado com sucesso", code: 200 });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+export async function ArquivarClientesController(req, res) {
+  try {
+    const uuidCliente = req.params.uuid;
+    const uuid = req.uuid;
+
+    await ArquivarClientes(uuidCliente, uuid);
+
+    return res.status(200).json({msg:"Cliente arquivado com sucesso",code:200})
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ msg: "Um erro ocorreu", code: 400 });
+  }
+}
+
+
+export async function CadastrarFuncionariosController(req,res) {
+  try {
+    const data = req.funcionarioData;
+
+    await cadastrarFuncionarios(...data)
+
+    return res.status(200).json({ code: 200, msg: "Funcionário cadastrado com sucesso" });
     
   } catch (error) {
     console.error(error);

@@ -75,17 +75,17 @@ export const Clientes = db.define(
     },
     documento_caminho: {
       type: DataTypes.STRING(100),
-      allowNull: true, // ✅ CORRIGIDO
+      allowNull: true, 
       field: "documento_caminho_Clientes",
     },
     tipo_documento: {
       type: DataTypes.STRING(10),
-      allowNull: true, // ✅ CORRIGIDO
+      allowNull: true, 
       field: "tipo_documento_Clientes",
     },
     comprovante_residencia: {
       type: DataTypes.STRING(100),
-      allowNull: true, // ✅ CORRIGIDO
+      allowNull: true, 
       field: "comprovante_residencia_caminho_Clientes",
     },
     carteira_trabalho: {
@@ -94,13 +94,13 @@ export const Clientes = db.define(
       field: "carteira_trabalho_caminho_Clientes",
     },
     chave_pix: {
-      type: DataTypes.STRING(100), // ✅ CORRIGIDO (era 200)
-      allowNull: true, // ✅ CORRIGIDO
+      type: DataTypes.STRING(100),
+      allowNull: true, 
       field: "chave_pix_recebedora_Clientes",
     },
     tipo_chave_pix: {
       type: DataTypes.STRING(20),
-      allowNull: true, // ✅ CORRIGIDO
+      allowNull: true, 
       field: "tipo_chave_Clientes",
     },
     byte: {
@@ -130,6 +130,16 @@ export const Clientes = db.define(
       allowNull: true,
       field: "contrato_locacao_aluguel_Clientes",
     },
+    arquivado:{
+      type:DataTypes.BOOLEAN,
+      defaultValue:false,
+      field:"arquivado_Clientes"
+    },
+    cidade:{
+      type:DataTypes.STRING(80),
+      allowNull:false,
+      field:"cidade_Clientes"
+    }
   },
   {
     freezeTableName: true,

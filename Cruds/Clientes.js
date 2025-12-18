@@ -1,4 +1,4 @@
-import { Op, or } from "sequelize";
+import { Op, or, where } from "sequelize";
 import { Clientes } from "../Models/Clientes.js";
 import { Indicacoes } from "../Models/Indicacoes.js";
 import { geraruuid } from "../Utils/gerador.js";
@@ -27,7 +27,7 @@ export async function cadastrarCliente(dados) {
     tag,
     status,
     score,
-    Dono_id
+    Dono_id,
   } = dados;
 
   return await Clientes.create({
@@ -73,10 +73,12 @@ export async function buscarUuidClientesIndicacao(uuid_Clientes, uuid_Usuario) {
     ],
   });
 }
-export async function buscarClientesCpfTelefone(cpf, telefone,uuidDono) {
+export async function buscarClientesCpfTelefone(cpf, telefone, uuidDono) {
   return await Clientes.findOne({
-    where: { [Op.or]: [{ cpf: cpf }, { telefone: telefone }],
-  Dono_id:uuidDono },
+    where: {
+      [Op.or]: [{ cpf: cpf }, { telefone: telefone }],
+      Dono_id: uuidDono,
+    },
   });
 }
 
@@ -93,29 +95,46 @@ export async function retornarTodosClientesPublic(uuid_Usuario) {
         attributes: { exclude: ["id", "cpf", "uuid_Cliente_Indicacoes"] },
       },
     ],
+    order: [["nome", "ASC"]],
   });
 }
 
 export async function retornarTodosClientesSelect(uuid) {
   return await Clientes.findAll({
     attributes: ["Clientes_id", "nome", "telefone", "status"],
-    where:{ Dono_id: uuid}
+    where: { Dono_id: uuid },
+    order: [["nome", "ASC"]],
   });
 }
 
-export async function deletarClientesUuid(uuid_Clientes,uuid_Usuario) {
+export async function deletarClientesUuid(uuid_Clientes, uuid_Usuario) {
   return await Clientes.destroy({
-    where: { Clientes_id: uuid_Clientes,
-      Dono_id: uuid_Usuario
+    where: { Clientes_id: uuid_Clientes, Dono_id: uuid_Usuario },
+  });
+}
+
+export async function atualizarClientes(
+  clientesUuid,
+  uuidUsuario,
+  objetoUpdate
+) {
+  return await Clientes.update(objetoUpdate, {
+    where: {
+      Clientes_id: clientesUuid,
+      Dono_id: uuidUsuario,
     },
   });
 }
 
-export async function atualizarClientes(clientesUuid, uuidUsuario, objetoUpdate) {
-  return await Clientes.update(objetoUpdate, {
-    where: {
-      Clientes_id: clientesUuid,
-      Dono_id: uuidUsuario
+export async function ArquivarClientes(uuidClientes, uuidUsuarios) {
+  return await Clientes.update(
+    { arquivado: true },
+    {
+      where: {
+        Clientes_id: uuidClientes,
+        Dono_id: uuidUsuarios,
+      },
     }
-  });
+  );
 }
+
