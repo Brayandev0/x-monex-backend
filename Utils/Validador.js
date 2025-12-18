@@ -182,9 +182,6 @@ export async function validarCadastroCliente(dados) {
     if (!cpf || !validarCPF(cpf)) {
       return { valido: false, mensagem: "CPF inválido" };
     }
-    if(!cidade){
-      return {valido:false, mensagem:"Cidade invalida"}
-    }
     
     const residencial = {
       rua: dados["enderecoResidencial.rua"]?.[0],

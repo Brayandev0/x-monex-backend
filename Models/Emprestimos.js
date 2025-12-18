@@ -26,6 +26,8 @@ const Emprestimos = db.define("Emprestimos", {
     type: DataTypes.DATEONLY,
     allowNull: false,
     field: "data_Emprestimos"
+    
+    
   },
 
   data_pagamento: {

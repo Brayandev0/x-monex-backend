@@ -28,6 +28,7 @@ export async function cadastrarCliente(dados) {
     status,
     score,
     Dono_id,
+    cidade
   } = dados;
 
   return await Clientes.create({
@@ -54,6 +55,7 @@ export async function cadastrarCliente(dados) {
     tag: tag,
     status: status,
     score: score ? score : 0,
+    cidade : cidade,
   });
 }
 export async function buscarUuidClientes(uuid_Clientes, uuid_Usuario) {

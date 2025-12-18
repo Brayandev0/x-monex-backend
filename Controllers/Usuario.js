@@ -191,7 +191,11 @@ export async function deletarEmprestimosController(req, res) {
     const uuid = req.uuid;
     const uuidEmprestimo = req.uuidEmprestimo;
 
-    await deletarEmprestimosUuid(uuidEmprestimo, uuid);
+    console.log("UUID Empréstimo:", uuidEmprestimo);
+    console.log("UUID Usuário:", uuid);
+
+    const data = await deletarEmprestimosUuid(uuidEmprestimo, uuid);
+    console.log("Resultado da deleção:", data);
 
     return res
       .status(200)
@@ -208,7 +212,10 @@ export async function atualizarEmprestimosController(req, res) {
     const objetoUpdate = req.ObjetoUpdate;
     const emprestimosUuid = req.uuidEmprestimo;
 
-    await atualizarEmprestimos(emprestimosUuid, uuidUsuario, objetoUpdate);
+    console.log("Objeto Update:", objetoUpdate, "UUID Empréstimo:", emprestimosUuid, "UUID Usuário:", uuidUsuario);
+
+    const a = await atualizarEmprestimos(emprestimosUuid, uuidUsuario, objetoUpdate);
+    console.log("Resultado da atualização:", a);
 
     return res
       .status(200)

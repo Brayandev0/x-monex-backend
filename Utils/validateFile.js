@@ -164,6 +164,7 @@ export async function uploadDocumento(campos, arquivos, uuidDono) {
 
     objetoCliente.Dono_id = uuidDono;      
 
+    objetoCliente.cidade = "Campo Grande";
     console.log("Objeto Cliente : ", objetoCliente);
 
     const indicacaoCliente = validaDocumento.indicacao;

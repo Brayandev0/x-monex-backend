@@ -280,22 +280,6 @@ export async function deletarEmprestimosMiddleware(req, res, next) {
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
 }
-/*
-{
-  "id": "e162cdaf-518f-4727-afde-9e016bf0e3eb",
-  "data": "2024-01-15",
-  "data_Pag": "2024-12-15",
-  "valor": 1000.00,
-  "taxa_juros": 5.5,
-  "tipo_juros": "simples",
-  "quantidade_parcelas": 12,
-  "parcelas_pagas": 0,
-  "valor_parcela": 83.33,
-  "status": "ativo",
-  "observacao": "Observações sobre o empréstimo",
-  "data_final":"2025-7-23"
-}
-*/
 export async function atualizarEmprestimosMiddleware(req, res, next) {
   try {
     var ObjetoUpdate = {};
@@ -359,6 +343,7 @@ export async function atualizarEmprestimosMiddleware(req, res, next) {
       }
       ObjetoUpdate.tipo_juros = tipo_juros;
     }
+    console.log(data);
     if (data) {
       if (!Date.parse(data)) {
         return res
