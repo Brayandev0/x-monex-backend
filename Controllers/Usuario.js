@@ -2,6 +2,7 @@ import {
   ArquivarClientes,
   atualizarClientes,
   deletarClientesUuid,
+  DesarquivarClientes,
   retornarTodosClientesPublic,
 } from "../Cruds/Clientes.js";
 import {
@@ -10,7 +11,7 @@ import {
   CadastrarEmprestimos,
   deletarEmprestimosUuid,
 } from "../Cruds/Emprestimos.js";
-import { cadastrarFuncionarios } from "../Cruds/Funcionarios.js";
+import { buscarFuncionarios, cadastrarFuncionarios } from "../Cruds/Funcionarios.js";
 import { verEmprestimosMiddleware } from "../Middlewares/Usuario.js";
 import { gerarToken } from "../Utils/AuthToken.js";
 import { UploadFiles } from "../Utils/Upload.js";
@@ -23,7 +24,6 @@ export async function LoginUsuarioController(req, res) {
     return res.status(200).json({
       msg: "Login realizado com sucesso",
       code: 200,
-      nome: usuario.nome,
       token: token,
     });
   } catch (error) {
@@ -212,9 +212,20 @@ export async function atualizarEmprestimosController(req, res) {
     const objetoUpdate = req.ObjetoUpdate;
     const emprestimosUuid = req.uuidEmprestimo;
 
-    console.log("Objeto Update:", objetoUpdate, "UUID Empréstimo:", emprestimosUuid, "UUID Usuário:", uuidUsuario);
+    console.log(
+      "Objeto Update:",
+      objetoUpdate,
+      "UUID Empréstimo:",
+      emprestimosUuid,
+      "UUID Usuário:",
+      uuidUsuario
+    );
 
-    const a = await atualizarEmprestimos(emprestimosUuid, uuidUsuario, objetoUpdate);
+    const a = await atualizarEmprestimos(
+      emprestimosUuid,
+      uuidUsuario,
+      objetoUpdate
+    );
     console.log("Resultado da atualização:", a);
 
     return res
@@ -250,7 +261,40 @@ export async function ArquivarClientesController(req, res) {
 
     await ArquivarClientes(uuidCliente, uuid);
 
-    return res.status(200).json({msg:"Cliente arquivado com sucesso",code:200})
+    return res
+      .status(200)
+      .json({ msg: "Cliente arquivado com sucesso", code: 200 });
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ msg: "Um erro ocorreu", code: 400 });
+  }
+}
+
+export async function CadastrarFuncionariosController(req, res) {
+  try {
+    const data = req.funcionarioData;
+
+    await cadastrarFuncionarios(data.nome, data.email, data.senha, data.nivel_permissao, req.uuid);
+
+    return res
+      .status(200)
+      .json({ msg: "Funcionário cadastrado com sucesso", code: 201 });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+export async function DesarquivarClientesController(req, res) {
+  try {
+    const uuidCliente = req.params.uuid;
+    const uuid = req.uuid;
+
+    await DesarquivarClientes(uuidCliente, uuid);
+
+    return res
+      .status(200)
+      .json({ msg: "Cliente desarquivado com sucesso", code: 200 });
   } catch (error) {
     console.error(error);
     return res.status(400).json({ msg: "Um erro ocorreu", code: 400 });
@@ -258,16 +302,15 @@ export async function ArquivarClientesController(req, res) {
 }
 
 
-export async function CadastrarFuncionariosController(req,res) {
+export async function BuscarFuncionariosController(req,res) {
   try {
-    const data = req.funcionarioData;
-
-    await cadastrarFuncionarios(...data)
-
-    return res.status(200).json({ code: 200, msg: "Funcionário cadastrado com sucesso" });
-    
+    const funcionarios = await buscarFuncionarios(req.uuid);
+    if(!funcionarios || funcionarios.length === 0) {
+      return res.status(404).json({ msg: "Nenhum funcionário encontrado", code: 404 });
+    }
+    return res.status(200).json({ msg: "Funcionários encontrados com sucesso", code: 200, funcionarios });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
   

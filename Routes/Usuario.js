@@ -7,6 +7,7 @@ import {
   cadastrarFuncionariosMiddleware,
   deletarClientesMiddleware,
   deletarEmprestimosMiddleware,
+  DesarquivarClientesMiddleware,
   LoginMiddleware,
   retornarClientesMiddleware,
     verClientesUuidMiddleware,
@@ -26,7 +27,9 @@ import {
   atualizarEmprestimosController,
   atualizarClientesController,
   ArquivarClientesController,
-  CadastrarFuncionariosController
+  CadastrarFuncionariosController,
+  DesarquivarClientesController,
+  BuscarFuncionariosController
 } from "../Controllers/Usuario.js";
 import { AuthMiddleware } from "../Middlewares/Auth.js";
 import multer from "multer";
@@ -40,6 +43,8 @@ UsuarioRouter.get("/clientes",retornarClientesMiddleware,retornarClientesControl
 UsuarioRouter.get("/clientes/:uuid",verClientesUuidMiddleware,verClientesUuidController);
 UsuarioRouter.get("/emprestimos",retornarEmprestimosController);
 UsuarioRouter.get("/emprestimos/:uuid",verEmprestimosMiddleware,verEmprestimosController)
+UsuarioRouter.get("/funcionarios", BuscarFuncionariosController)
+
 
 UsuarioRouter.post("/login", LoginMiddleware, LoginUsuarioController);
 UsuarioRouter.post("/clientes", cadastrarClienteController);
@@ -47,9 +52,10 @@ UsuarioRouter.post("/emprestimos",cadastrarEmpestimosMiddleware, cadastrarEmpest
 UsuarioRouter.post("/funcionarios",cadastrarFuncionariosMiddleware, CadastrarFuncionariosController)
 
 
-UsuarioRouter.put("/emprestimos/:uuid",atualizarEmprestimosMiddleware,atualizarEmprestimosController)
-UsuarioRouter.put("/clientes/:uuid",atualizarClientesMiddleware,atualizarClientesController)
-UsuarioRouter.put("/clientes/:uuid/arquivar",ArquivarClientesMiddleware,ArquivarClientesController)
+UsuarioRouter.patch("/emprestimos/:uuid",atualizarEmprestimosMiddleware,atualizarEmprestimosController)
+UsuarioRouter.patch("/clientes/:uuid",atualizarClientesMiddleware,atualizarClientesController)
+UsuarioRouter.patch("/clientes/:uuid/arquivar",ArquivarClientesMiddleware,ArquivarClientesController)
+UsuarioRouter.patch("/clientes/:uuid/desarquivar",DesarquivarClientesMiddleware,DesarquivarClientesController)
 
 UsuarioRouter.delete("/clientes/:uuid",deletarClientesMiddleware,deletarClientesController)
 UsuarioRouter.delete("/emprestimos/:uuid",deletarEmprestimosMiddleware,deletarEmprestimosController)

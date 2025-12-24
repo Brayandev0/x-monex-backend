@@ -2,9 +2,10 @@ import jsonwebtoken from 'jsonwebtoken';
 import dotenv, { config } from 'dotenv';
 config();
 
-export async function gerarToken(uuid){
+export async function gerarToken(uuid,cargo){
+
     return await jsonwebtoken.sign(
-        {uuid:uuid},
+        {uuid:uuid,cargo:cargo ? cargo : "5"},
         process.env.JWT_SECRET,
         { expiresIn: '7d',algorithm: "HS256" }
     )

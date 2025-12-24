@@ -1,6 +1,7 @@
 import {
   buscarUuidClientes,
   buscarUuidClientesIndicacao,
+  retornarClientesArquivados,
   retornarTodosClientesPublic,
   retornarTodosClientesSelect,
 } from "../Cruds/Clientes.js";
@@ -8,9 +9,11 @@ import {
   buscarEmprestimosClientes,
   buscarEmprestimosUuidHash,
 } from "../Cruds/Emprestimos.js";
+import { buscarFuncionarioEmail } from "../Cruds/Funcionarios.js";
 import { buscarEmail } from "../Cruds/Usuarios.js";
 import {
   compararDados,
+  criptografarDados,
   descriptografarDadosAES,
 } from "../Utils/Criptografar.js";
 import { UploadFiles } from "../Utils/Upload.js";
@@ -18,12 +21,13 @@ import { validar_UUID_V4, validarCPF, validarEmail } from "../Utils/Validador.js
 
 export async function LoginMiddleware(req, res, next) {
   try {
-    const { email, senha } = req.body;
+    var data;
+    const { email, senha, tipo } = req.body;
 
-    if (!email || !senha) {
+    if (!email || !senha || !tipo) {
       return res
         .status(400)
-        .json({ msg: "Email e senha são obrigatórios", code: 400 });
+        .json({ msg: "Email, senha e cargo são obrigatórios", code: 400 });
     }
     if (!validarEmail(email)) {
       return res.status(400).json({ msg: "Email inválido", code: 400 });
@@ -33,7 +37,16 @@ export async function LoginMiddleware(req, res, next) {
         .status(400)
         .json({ msg: "Senha deve ter no mínimo 4 caracteres", code: 400 });
     }
-    const data = await buscarEmail(email);
+    if (tipo !== "admin" && tipo !== "funcionario") {
+      return res
+        .status(400)
+        .json({ msg: "Tipo de usuário inválido", code: 400 });
+    }
+    if (tipo == "funcionario") {
+      data = await buscarFuncionarioEmail(email, true);
+    }else{
+      data = await buscarEmail(email);
+    }
     if (!data) {
       return res
         .status(404)
@@ -71,10 +84,14 @@ export async function retornarClientesMiddleware(req, res, next) {
   try {
     const uuid = req.uuid;
     const unico = req.query.unico;
-    if (!unico) {
+    const arquivado = req.query.arquivado;
+    
+    if (!unico && !arquivado) {
       var data = await retornarTodosClientesPublic(uuid);
-    } else {
+    } else if (!arquivado && unico) {
       var data = await retornarTodosClientesSelect(uuid);
+    } else if (arquivado && !unico) {
+      var data = await retornarClientesArquivados(uuid);
     }
 
     req.data = data;
@@ -777,6 +794,9 @@ export async function ArquivarClientesMiddleware(req,res,next) {
     if(!cliente){
       return res.status(400).json({msg:"Cliente nao encontrado",code:400})
     }
+    if(cliente.arquivado == true){
+      return res.status(400).json({msg:"Cliente ja esta arquivado",code:400})
+    }
 
     next()
   } catch (error) {
@@ -788,23 +808,31 @@ export async function ArquivarClientesMiddleware(req,res,next) {
 
 export async function cadastrarFuncionariosMiddleware(req,res,next) {
   try {
-    const { nome, email, senha, nivel_permissao } = req.body;
+    let { nome, email, senha, nivel_permissao } = req.body;
     const uuid = req.uuid;
 
-    if (!nome || !email || !senha || !nivel_permissao) {
-      return res.status(400).json({ msg: "Campos obrigatórios não foram preenchidos", code: 400 });
+    if (!nome || !email || !senha || !nivel_permissao && nivel_permissao !== 0) {
+      return res.status(400).json({ msg: "Por favor, preencha os campos obrigatórios: nome, email, senha e nível de permissão.", code: 400 });
     }
     if (!validarEmail(email)) {
-      return res.status(400).json({ msg: "Email inválido", code: 400 });
+      return res.status(400).json({ msg: "Email inválido. Forneça um email no formato correto.", code: 400 });
     }
-    if (senha.length < 4) {
+    if (senha.length < 6) {
       return res
         .status(400)
-        .json({ msg: "Senha deve ter no mínimo 4 caracteres", code: 400 });
+        .json({ msg: "Senha muito curta. A senha deve conter ao menos 6 caracteres.", code: 400 });
     }
-    if (isNaN(Number(nivel_permissao)) || Number(nivel_permissao) < 0 || Number(nivel_permissao) > 5) {
-      return res.status(400).json({ msg: "Nível de permissão inválido", code: 400 });
+    if (isNaN(Number(nivel_permissao)) || Number(nivel_permissao) < 0 || Number(nivel_permissao) > 3) {
+      return res.status(400).json({ msg: "Nível de permissão inválido. Informe um valor entre 0 e 3.", code: 400 });
     }
+    const funcionarioExistente = await buscarFuncionarioEmail(email, uuid);
+
+    if (funcionarioExistente) {
+      return res.status(400).json({ msg: "Este email já está em uso por outro funcionário.", code: 400 });
+    }
+
+    senha = await criptografarDados(senha);
+
     req.funcionarioData = {
       nome,
       email,
@@ -814,6 +842,32 @@ export async function cadastrarFuncionariosMiddleware(req,res,next) {
     };
     next();
     
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({msg:"Ocorreu um erro interno. Tente novamente mais tarde.",code:500})
+  }
+  
+}
+
+export async function DesarquivarClientesMiddleware(req,res,next) {
+  try {
+    const uuidCliente = req.params.uuid
+    const uuid = req.uuid
+
+    if(!uuidCliente || !validar_UUID_V4(uuid)){
+      return res.status(400).json({msg:"Cliente informado invalido",code:400})
+    }
+    const cliente = await buscarUuidClientes(uuidCliente,uuid);
+    
+    if(!cliente){
+      return res.status(400).json({msg:"Cliente nao encontrado",code:400})
+    }
+    if(cliente.arquivado == false){
+      return res.status(400).json({msg:"Cliente nao esta arquivado",code:400})
+    }
+
+
+    next()
   } catch (error) {
     console.error(error)
     return res.status(500).json({msg:"Um erro ocorreu",code:500})

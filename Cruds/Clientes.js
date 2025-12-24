@@ -89,7 +89,7 @@ export async function retornarTodosClientesPublic(uuid_Usuario) {
     attributes: {
       exclude: ["valor_solicitado", "byte", "tag", "cpf"],
     },
-    where: { Dono_id: uuid_Usuario },
+    where: { Dono_id: uuid_Usuario, arquivado: false },
     include: [
       {
         model: Indicacoes,
@@ -104,7 +104,7 @@ export async function retornarTodosClientesPublic(uuid_Usuario) {
 export async function retornarTodosClientesSelect(uuid) {
   return await Clientes.findAll({
     attributes: ["Clientes_id", "nome", "telefone", "status"],
-    where: { Dono_id: uuid },
+    where: { Dono_id: uuid, arquivado: false },
     order: [["nome", "ASC"]],
   });
 }
@@ -140,3 +140,32 @@ export async function ArquivarClientes(uuidClientes, uuidUsuarios) {
   );
 }
 
+export async function DesarquivarClientes(uuidClientes, uuidUsuarios) {
+  return await Clientes.update(
+    { arquivado: false },
+    {
+      where: {
+        Clientes_id: uuidClientes,
+        Dono_id: uuidUsuarios,
+      },
+    }
+  );
+}
+
+
+export async function retornarClientesArquivados(uuidUsuario) {
+  return await Clientes.findAll({
+    attributes: {
+      exclude: ["valor_solicitado", "byte", "tag", "cpf"],
+    },
+    where: { Dono_id: uuidUsuario, arquivado: true },
+    include: [
+      {
+        model: Indicacoes,
+        as: "IndicacaoRecebida", // a indicação recebida por este cliente
+        attributes: { exclude: ["id", "cpf", "uuid_Cliente_Indicacoes"] },
+      },
+    ],
+    order: [["nome", "ASC"]],
+  });
+}

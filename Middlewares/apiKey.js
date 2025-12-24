@@ -4,6 +4,10 @@ config();
 
 export async function VerificarApiKey(req,res,next){
     try {
+        console.log("Verificando API Key para a rota:", req.original)
+        if (req.method === "OPTIONS") {
+            return next();
+        }
         const apiKey = req.headers['x-api-key'];
         const keyEnv = process.env.API_KEY;
 
