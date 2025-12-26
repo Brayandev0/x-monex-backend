@@ -3,7 +3,6 @@ import {
   atualizarClientes,
   deletarClientesUuid,
   DesarquivarClientes,
-  retornarTodosClientesPublic,
 } from "../Cruds/Clientes.js";
 import {
   atualizarEmprestimos,
@@ -11,15 +10,31 @@ import {
   CadastrarEmprestimos,
   deletarEmprestimosUuid,
 } from "../Cruds/Emprestimos.js";
-import { buscarFuncionarios, cadastrarFuncionarios } from "../Cruds/Funcionarios.js";
-import { verEmprestimosMiddleware } from "../Middlewares/Usuario.js";
+import {
+  atualizarFuncionarios,
+  buscarFuncionarios,
+  buscarNivelPermissao,
+  cadastrarFuncionarios,
+  deletarFuncionariosUuid,
+} from "../Cruds/Funcionarios.js";
+import { buscarUuid } from "../Cruds/Usuarios.js";
 import { gerarToken } from "../Utils/AuthToken.js";
 import { UploadFiles } from "../Utils/Upload.js";
 
 export async function LoginUsuarioController(req, res) {
   try {
+    var token;
     const usuario = req.usuario;
-    const token = await gerarToken(usuario.id);
+    const tipo = req.tipo;
+    if (tipo == "funcionario") {
+      token = await gerarToken(
+        usuario.id_dono,
+        usuario.nivel_permissao,
+        usuario.id
+      );
+    } else {
+      token = await gerarToken(usuario.id);
+    }
 
     return res.status(200).json({
       msg: "Login realizado com sucesso",
@@ -274,7 +289,13 @@ export async function CadastrarFuncionariosController(req, res) {
   try {
     const data = req.funcionarioData;
 
-    await cadastrarFuncionarios(data.nome, data.email, data.senha, data.nivel_permissao, req.uuid);
+    await cadastrarFuncionarios(
+      data.nome,
+      data.email,
+      data.senha,
+      data.nivel_permissao,
+      req.uuid
+    );
 
     return res
       .status(200)
@@ -301,17 +322,101 @@ export async function DesarquivarClientesController(req, res) {
   }
 }
 
-
-export async function BuscarFuncionariosController(req,res) {
+export async function BuscarFuncionariosController(req, res) {
   try {
     const funcionarios = await buscarFuncionarios(req.uuid);
-    if(!funcionarios || funcionarios.length === 0) {
-      return res.status(404).json({ msg: "Nenhum funcionário encontrado", code: 404 });
+    if (!funcionarios || funcionarios.length === 0) {
+      return res
+        .status(404)
+        .json({ msg: "Nenhum funcionário encontrado", code: 404 });
     }
-    return res.status(200).json({ msg: "Funcionários encontrados com sucesso", code: 200, funcionarios });
+    return res.status(200).json({
+      msg: "Funcionários encontrados com sucesso",
+      code: 200,
+      funcionarios,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
-  
+}
+
+export async function verFuncionariosController(req, res) {
+  try {
+    const data = req.data;
+
+    return res.status(200).json({
+      code: 200,
+      msg: "Funcionário retornado com sucesso",
+      funcionario: data,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+export async function deletarFuncionarioController(req, res) {
+  try {
+    const uuid = req.uuid;
+    const uuidFuncionario = req.params.uuid;
+
+    await deletarFuncionariosUuid(uuid, uuidFuncionario);
+
+    return res
+      .status(200)
+      .json({ msg: "Funcionário deletado com sucesso", code: 200 });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+export async function atualizarFuncionarioController(req, res) {
+  try {
+    const uuidFuncionario = req.uuidFuncionario;
+    const funcionarioUpdate = req.funcionarioUpdate;
+    const uuid = req.uuid;
+
+    await atualizarFuncionarios(uuid, uuidFuncionario, funcionarioUpdate);
+
+    return res
+      .status(200)
+      .json({ msg: "Funcionário atualizado com sucesso", code: 200 });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+export async function verPermissaoController(req, res) {
+  try {
+    let uuidFuncionario = req.uuidFuncionario;
+    
+    if (!uuidFuncionario) {
+      uuidFuncionario = req.uuid;
+    }
+    const nivel_permissao = await buscarNivelPermissao(uuidFuncionario);
+    if (!nivel_permissao) {
+      const usuarioAdmin = await buscarUuid(req.uuid);
+      if (!usuarioAdmin) {
+        return res
+          .status(404)
+          .json({ msg: "Usuário não encontrado", code: 404 });
+      }
+      return res.status(200).json({
+        code: 200,
+        msg: "Nível de permissão retornado com sucesso",
+        cargo: 3,
+      });
+    }
+
+    return res.status(200).json({
+      code: 200,
+      msg: "Nível de permissão retornado com sucesso",
+      cargo: nivel_permissao.nivel_permissao,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
 }

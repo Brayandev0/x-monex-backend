@@ -6,17 +6,14 @@ export async function AuthMiddleware(req, res, next) {
     if (req.path === "/login" || req.path === "/login/") {
       return next();
     }
-    var cookieName = process.env.Auth_cookie_name || "clientSession";
 
     const token = req.headers["authorization"]
-    console.log("token : ", token);
     if (!token) {
       return res
         .status(401)
         .json({ msg: "Login inválido ou expirado", code: 401 });
     }
     const tokenWithoutBearer = token.split(" ")[1];
-    console.log(tokenWithoutBearer);
     const verify = await verificarToken(tokenWithoutBearer);
     if (!verify) {
       return res
@@ -29,7 +26,10 @@ export async function AuthMiddleware(req, res, next) {
         .status(401)
         .json({ msg: "Login inválido ou expirado", code: 401 });
     }
+    
     req.uuid = verify.uuid;
+    req.cargo = verify.cargo;
+    req.uuidFuncionario = verify.uuid_Funcionario;
     next();
   } catch (error) {
     console.error("Erro no AuthMiddleware:", error);

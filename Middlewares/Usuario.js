@@ -9,7 +9,11 @@ import {
   buscarEmprestimosClientes,
   buscarEmprestimosUuidHash,
 } from "../Cruds/Emprestimos.js";
-import { buscarFuncionarioEmail } from "../Cruds/Funcionarios.js";
+import {
+  buscarFuncionarioEmail,
+  buscarFuncionarioEmailPublic,
+  buscarFuncionariosUuid,
+} from "../Cruds/Funcionarios.js";
 import { buscarEmail } from "../Cruds/Usuarios.js";
 import {
   compararDados,
@@ -17,7 +21,11 @@ import {
   descriptografarDadosAES,
 } from "../Utils/Criptografar.js";
 import { UploadFiles } from "../Utils/Upload.js";
-import { validar_UUID_V4, validarCPF, validarEmail } from "../Utils/Validador.js";
+import {
+  validar_UUID_V4,
+  validarCPF,
+  validarEmail,
+} from "../Utils/Validador.js";
 
 export async function LoginMiddleware(req, res, next) {
   try {
@@ -43,8 +51,8 @@ export async function LoginMiddleware(req, res, next) {
         .json({ msg: "Tipo de usuário inválido", code: 400 });
     }
     if (tipo == "funcionario") {
-      data = await buscarFuncionarioEmail(email, true);
-    }else{
+      data = await buscarFuncionarioEmailPublic(email);
+    } else {
       data = await buscarEmail(email);
     }
     if (!data) {
@@ -54,10 +62,11 @@ export async function LoginMiddleware(req, res, next) {
     }
     if (!(await compararDados(data.senha, senha))) {
       return res
-        .status(404)
-        .json({ msg: "Email inválido ou senha incorreta", code: 404 });
+        .status(400)
+        .json({ msg: "Email inválido ou senha incorreta", code: 400 });
     }
     req.usuario = data;
+    req.tipo = tipo;
     next();
   } catch (error) {
     console.error(error);
@@ -85,7 +94,7 @@ export async function retornarClientesMiddleware(req, res, next) {
     const uuid = req.uuid;
     const unico = req.query.unico;
     const arquivado = req.query.arquivado;
-    
+
     if (!unico && !arquivado) {
       var data = await retornarTodosClientesPublic(uuid);
     } else if (!arquivado && unico) {
@@ -193,7 +202,7 @@ export async function cadastrarEmpestimosMiddleware(req, res, next) {
     if (observacao && observacao.length > 500) {
       return res.status(400).json({ msg: "Observação muito longa", code: 400 });
     }
-    const clienteData = await buscarUuidClientes(id,req.uuid);
+    const clienteData = await buscarUuidClientes(id, req.uuid);
     if (!clienteData) {
       return res.status(404).json({ msg: "Cliente não encontrado", code: 404 });
     }
@@ -216,13 +225,15 @@ export async function verEmprestimosMiddleware(req, res, next) {
     req.uuid = uuid;
 
     var emprestimos = await buscarEmprestimosUuidHash(uuid, uuidUsuario);
-    if(!emprestimos){
-      return res.status(404).json({msg:"Emprestimo nao encontrado",code:404})
+    if (!emprestimos) {
+      return res
+        .status(404)
+        .json({ msg: "Emprestimo nao encontrado", code: 404 });
     }
     emprestimos = JSON.parse(JSON.stringify(emprestimos));
-    
+
     var { cpf, byte, tag } = emprestimos.clientesEmprestimos;
-    console.log(cpf,byte,tag)
+    console.log(cpf, byte, tag);
     cpf = descriptografarDadosAES(cpf, byte, tag);
     emprestimos.clientesEmprestimos.cpf = cpf;
     delete emprestimos.clientesEmprestimos.byte;
@@ -253,7 +264,7 @@ export async function verClientesUuidMiddleware(req, res, next) {
     const clientesJson = JSON.parse(JSON.stringify(clientes));
 
     var { cpf, byte, tag } = clientesJson;
-    console.log(cpf,byte,tag)
+    console.log(cpf, byte, tag);
     cpf = descriptografarDadosAES(cpf, byte, tag);
     clientesJson.cpf = cpf;
     delete clientesJson.byte;
@@ -326,8 +337,8 @@ export async function atualizarEmprestimosMiddleware(req, res, next) {
       !parcelas_pagas &&
       !valor_parcela &&
       !status &&
-      !data_final && 
-      !observacao 
+      !data_final &&
+      !observacao
     ) {
       return res
         .status(400)
@@ -442,7 +453,6 @@ export async function atualizarEmprestimosMiddleware(req, res, next) {
 
     next();
   } catch (error) {
-  
     console.log(error);
     return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
@@ -453,16 +463,13 @@ export async function atualizarClientesMiddleware(req, res, next) {
     const {
       nome,
       telefone,
-      nomePai,
-      nomeMae,
+      pai,
+      mae,
       indicacao,
       indicacaoGrau,
       enderecoResidencial,
       enderecoComercial,
-      enderecoPais,
       referencias,
-      parente1,
-      parente2,
       chavePix,
       tipoChavePix,
       status,
@@ -474,16 +481,13 @@ export async function atualizarClientesMiddleware(req, res, next) {
     if (
       !nome &&
       !telefone &&
-      !nomePai &&
-      !nomeMae &&
+      !pai &&
+      !mae &&
       !indicacao &&
       !indicacaoGrau &&
       !enderecoResidencial &&
       !enderecoComercial &&
-      !enderecoPais &&
       !referencias &&
-      !parente1 &&
-      !parente2 &&
       !chavePix &&
       !tipoChavePix &&
       !status &&
@@ -501,42 +505,163 @@ export async function atualizarClientesMiddleware(req, res, next) {
 
     if (nome) {
       if (nome.length > 200 || nome.length < 3) {
-        return res
-          .status(400)
-          .json({ msg: "Nome inválido", code: 400 });
+        return res.status(400).json({ msg: "Nome inválido", code: 400 });
       }
       ObjetoUpdate.nome = nome;
     }
 
     if (telefone) {
-      const telefoneLimpo = telefone.replace(/\D/g, '');
+      const telefoneLimpo = telefone.replace(/\D/g, "");
       if (telefoneLimpo.length < 10 || telefoneLimpo.length > 14) {
-        return res
-          .status(400)
-          .json({ msg: "Telefone inválido", code: 400 });
+        return res.status(400).json({ msg: "Telefone inválido", code: 400 });
       }
       ObjetoUpdate.telefone = telefone;
     }
 
-    if (nomePai || nomeMae) {
+    // Validação do objeto Pai
+    if (pai) {
+      if (typeof pai !== "object") {
+        return res
+          .status(400)
+          .json({ msg: "Dados do pai inválidos", code: 400 });
+      }
+
       const paiObj = {};
-      if (nomePai) {
-        if (nomePai.length < 3 || nomePai.length > 200) {
+
+      // Valida nome do pai
+      if (pai.nome) {
+        if (pai.nome.length < 3 || pai.nome.length > 200) {
           return res
             .status(400)
             .json({ msg: "Nome do pai inválido", code: 400 });
         }
-        paiObj.nome = nomePai;
+        paiObj.nome = pai.nome;
       }
-      if (nomeMae) {
-        if (nomeMae.length < 3 || nomeMae.length > 200) {
+
+      // Valida endereço do pai
+      if (pai.endereco) {
+        if (typeof pai.endereco !== "object") {
+          return res
+            .status(400)
+            .json({ msg: "Endereço do pai inválido", code: 400 });
+        }
+
+        const { rua, numero, bairro, complemento } = pai.endereco;
+
+        if (rua && (rua.length < 3 || rua.length > 200)) {
+          return res
+            .status(400)
+            .json({ msg: "Rua do endereço do pai inválida", code: 400 });
+        }
+        if (numero && (isNaN(Number(numero)) || Number(numero) <= 0)) {
+          return res
+            .status(400)
+            .json({ msg: "Número do endereço do pai inválido", code: 400 });
+        }
+        if (bairro && (bairro.length < 3 || bairro.length > 100)) {
+          return res
+            .status(400)
+            .json({ msg: "Bairro do endereço do pai inválido", code: 400 });
+        }
+        if (complemento && complemento.length > 100) {
+          return res.status(400).json({
+            msg: "Complemento do endereço do pai inválido",
+            code: 400,
+          });
+        }
+
+        paiObj.endereco = pai.endereco;
+      }
+
+      ObjetoUpdate.pai = paiObj;
+    }
+
+    // Validação do objeto Mãe
+    if (mae) {
+      if (typeof mae !== "object") {
+        return res
+          .status(400)
+          .json({ msg: "Dados da mãe inválidos", code: 400 });
+      }
+
+      const maeObj = {};
+
+      // Valida nome da mãe
+      if (mae.nome) {
+        if (mae.nome.length < 3 || mae.nome.length > 200) {
           return res
             .status(400)
             .json({ msg: "Nome da mãe inválido", code: 400 });
         }
-        paiObj.nomeMae = nomeMae;
+        maeObj.nome = mae.nome;
       }
-      ObjetoUpdate.pai = paiObj;
+
+      // Valida endereço da mãe
+      if (mae.endereco) {
+        if (typeof mae.endereco !== "object") {
+          return res
+            .status(400)
+            .json({ msg: "Endereço da mãe inválido", code: 400 });
+        }
+
+        const { rua, numero, bairro, complemento } = mae.endereco;
+
+        if (rua && (rua.length < 3 || rua.length > 200)) {
+          return res
+            .status(400)
+            .json({ msg: "Rua do endereço da mãe inválida", code: 400 });
+        }
+        if (numero && (isNaN(Number(numero)) || Number(numero) <= 0)) {
+          return res
+            .status(400)
+            .json({ msg: "Número do endereço da mãe inválido", code: 400 });
+        }
+        if (bairro && (bairro.length < 3 || bairro.length > 100)) {
+          return res
+            .status(400)
+            .json({ msg: "Bairro do endereço da mãe inválido", code: 400 });
+        }
+        if (complemento && complemento.length > 100) {
+          return res.status(400).json({
+            msg: "Complemento do endereço da mãe inválido",
+            code: 400,
+          });
+        }
+
+        maeObj.endereco = mae.endereco;
+      }
+
+      // Valida parente1
+      if (mae.parente1) {
+        if (typeof mae.parente1 !== "object") {
+          return res
+            .status(400)
+            .json({ msg: "Dados do parente 1 inválidos", code: 400 });
+        }
+        if (!mae.parente1.nome || !mae.parente1.grauParentesco) {
+          return res
+            .status(400)
+            .json({ msg: "Dados do parente 1 incompletos", code: 400 });
+        }
+        maeObj.parente1 = mae.parente1;
+      }
+
+      // Valida parente2
+      if (mae.parente2) {
+        if (typeof mae.parente2 !== "object") {
+          return res
+            .status(400)
+            .json({ msg: "Dados do parente 2 inválidos", code: 400 });
+        }
+        if (!mae.parente2.nome || !mae.parente2.grauParentesco) {
+          return res
+            .status(400)
+            .json({ msg: "Dados do parente 2 incompletos", code: 400 });
+        }
+        maeObj.parente2 = mae.parente2;
+      }
+
+      ObjetoUpdate.mae = maeObj;
     }
 
     if (indicacao) {
@@ -549,13 +674,14 @@ export async function atualizarClientesMiddleware(req, res, next) {
     }
 
     if (enderecoResidencial) {
-      if (typeof enderecoResidencial !== 'object') {
+      if (typeof enderecoResidencial !== "object") {
         return res
           .status(400)
           .json({ msg: "Endereço residencial inválido", code: 400 });
       }
-      const { rua, numero, bairro, complemento, tipoImovel } = enderecoResidencial;
-      
+      const { rua, numero, bairro, complemento, tipoImovel } =
+        enderecoResidencial;
+
       if (rua && (rua.length < 3 || rua.length > 200)) {
         return res
           .status(400)
@@ -566,33 +692,38 @@ export async function atualizarClientesMiddleware(req, res, next) {
           .status(400)
           .json({ msg: "Bairro do endereço residencial inválido", code: 400 });
       }
-      if(numero && (isNaN(Number(numero)) || Number(numero) <= 0)) {
+      if (numero && (isNaN(Number(numero)) || Number(numero) <= 0)) {
         return res
           .status(400)
           .json({ msg: "Número do endereço residencial inválido", code: 400 });
       }
-      if(complemento && complemento.length > 100) {
-        return res
-          .status(400)
-          .json({ msg: "Complemento do endereço residencial inválido", code: 400 });
+      if (complemento && complemento.length > 100) {
+        return res.status(400).json({
+          msg: "Complemento do endereço residencial inválido",
+          code: 400,
+        });
       }
-      if (tipoImovel && !["Próprio", "Alugado", "Financiado", "Familiar"].includes(tipoImovel)) {
+      if (
+        tipoImovel &&
+        !["Próprio", "Alugado", "Financiado", "Familiar"].includes(tipoImovel)
+      ) {
         return res
           .status(400)
           .json({ msg: "Tipo de imóvel inválido", code: 400 });
       }
-      
+
       ObjetoUpdate.endereco_residencial = enderecoResidencial;
     }
 
     if (enderecoComercial) {
-      if (typeof enderecoComercial !== 'object') {
+      if (typeof enderecoComercial !== "object") {
         return res
           .status(400)
           .json({ msg: "Endereço comercial inválido", code: 400 });
       }
-      const { rua, numero, bairro, funcaoCargo, nomeEmpresa } = enderecoComercial;
-      
+      const { rua, numero, bairro, funcaoCargo, nomeEmpresa } =
+        enderecoComercial;
+
       if (rua && (rua.length < 3 || rua.length > 200)) {
         return res
           .status(400)
@@ -603,59 +734,23 @@ export async function atualizarClientesMiddleware(req, res, next) {
           .status(400)
           .json({ msg: "Bairro do endereço comercial inválido", code: 400 });
       }
-      if(numero && (isNaN(Number(numero)) || Number(numero) <= 0)) {
+      if (numero && (isNaN(Number(numero)) || Number(numero) <= 0)) {
         return res
           .status(400)
           .json({ msg: "Número do endereço comercial inválido", code: 400 });
       }
-      if(funcaoCargo && funcaoCargo.length > 100) {
+      if (funcaoCargo && funcaoCargo.length > 100) {
         return res
           .status(400)
           .json({ msg: "Função/Cargo inválido", code: 400 });
       }
-      if(nomeEmpresa && nomeEmpresa.length > 200) {
+      if (nomeEmpresa && nomeEmpresa.length > 200) {
         return res
           .status(400)
           .json({ msg: "Nome da empresa inválido", code: 400 });
       }
-      
-      ObjetoUpdate.endereco_comercial = enderecoComercial;
-    }
 
-    if (enderecoPais) {
-      if (typeof enderecoPais !== 'object') {
-        return res
-          .status(400)
-          .json({ msg: "Endereço dos pais inválido", code: 400 });
-      }
-      const { rua, numero, bairro, complemento } = enderecoPais;
-      
-      if (rua && (rua.length < 3 || rua.length > 200)) {
-        return res
-          .status(400)
-          .json({ msg: "Rua do endereço dos pais inválida", code: 400 });
-      }
-      if(numero && (isNaN(Number(numero)) || Number(numero) <= 0)) {
-        return res
-          .status(400)
-          .json({ msg: "Número do endereço dos pais inválido", code: 400 });
-      }
-      if(complemento && complemento.length > 100) {
-        return res
-          .status(400)
-          .json({ msg: "Complemento do endereço dos pais inválido", code: 400 });
-      }
-      if (bairro && (bairro.length < 3 || bairro.length > 100)) {
-        return res
-          .status(400)
-          .json({ msg: "Bairro do endereço dos pais inválido", code: 400 });
-      }
-      
-      // Armazena no campo 'pai' junto com os nomes
-      if (!ObjetoUpdate.pai) {
-        ObjetoUpdate.pai = {};
-      }
-      ObjetoUpdate.pai.endereco = enderecoPais;
+      ObjetoUpdate.endereco_comercial = enderecoComercial;
     }
 
     if (referencias) {
@@ -664,7 +759,7 @@ export async function atualizarClientesMiddleware(req, res, next) {
           .status(400)
           .json({ msg: "Referências inválidas (máximo 3)", code: 400 });
       }
-      
+
       for (const ref of referencias) {
         if (!ref.nome || !ref.telefone || !ref.grauParentesco) {
           return res
@@ -676,49 +771,15 @@ export async function atualizarClientesMiddleware(req, res, next) {
             .status(400)
             .json({ msg: "Nome da referência inválido", code: 400 });
         }
-        const telLimpo = ref.telefone.replace(/\D/g, '');
+        const telLimpo = ref.telefone.replace(/\D/g, "");
         if (telLimpo.length < 10 || telLimpo.length > 14) {
           return res
             .status(400)
             .json({ msg: "Telefone da referência inválido", code: 400 });
         }
       }
-      
-      ObjetoUpdate.referencia = referencias;
-    }
 
-    if (parente1 || parente2) {
-      const mae = {};
-      
-      if (parente1) {
-        if (typeof parente1 !== 'object') {
-          return res
-            .status(400)
-            .json({ msg: "Dados do parente 1 inválidos", code: 400 });
-        }
-        if (!parente1.nome || !parente1.grauParentesco) {
-          return res
-            .status(400)
-            .json({ msg: "Dados do parente 1 incompletos", code: 400 });
-        }
-        mae.parente1 = parente1;
-      }
-      
-      if (parente2) {
-        if (typeof parente2 !== 'object') {
-          return res
-            .status(400)
-            .json({ msg: "Dados do parente 2 inválidos", code: 400 });
-        }
-        if (!parente2.nome || !parente2.grauParentesco) {
-          return res
-            .status(400)
-            .json({ msg: "Dados do parente 2 incompletos", code: 400 });
-        }
-        mae.parente2 = parente2;
-      }
-      
-      ObjetoUpdate.mae = mae;
+      ObjetoUpdate.referencia = referencias;
     }
 
     if (valorSolicitado) {
@@ -732,15 +793,17 @@ export async function atualizarClientesMiddleware(req, res, next) {
 
     if (chavePix) {
       if (chavePix.length > 100) {
-        return res
-          .status(400)
-          .json({ msg: "Chave PIX inválida", code: 400 });
+        return res.status(400).json({ msg: "Chave PIX inválida", code: 400 });
       }
       ObjetoUpdate.chave_pix = chavePix;
     }
 
     if (tipoChavePix) {
-      if (!["cpf", "cnpj", "email", "telefone", "aleatoria"].includes(tipoChavePix.toLowerCase())) {
+      if (
+        !["cpf", "cnpj", "email", "telefone", "aleatoria"].includes(
+          tipoChavePix.toLowerCase()
+        )
+      ) {
         return res
           .status(400)
           .json({ msg: "Tipo de chave PIX inválido", code: 400 });
@@ -749,7 +812,11 @@ export async function atualizarClientesMiddleware(req, res, next) {
     }
 
     if (status) {
-      if (!["pendente", "aprovado", "reprovado", "ativo", "inativo"].includes(status)) {
+      if (
+        !["pendente", "aprovado", "reprovado", "ativo", "inativo"].includes(
+          status
+        )
+      ) {
         return res.status(400).json({ msg: "Status inválido", code: 400 });
       }
       ObjetoUpdate.status = status;
@@ -757,18 +824,14 @@ export async function atualizarClientesMiddleware(req, res, next) {
 
     if (score !== undefined) {
       if (isNaN(Number(score)) || Number(score) < 0 || Number(score) > 100) {
-        return res
-          .status(400)
-          .json({ msg: "Score inválido", code: 400 });
+        return res.status(400).json({ msg: "Score inválido", code: 400 });
       }
       ObjetoUpdate.score = score;
     }
 
     const cliente = await buscarUuidClientes(id, req.uuid);
     if (!cliente) {
-      return res
-        .status(404)
-        .json({ msg: "Cliente não encontrado", code: 404 });
+      return res.status(404).json({ msg: "Cliente não encontrado", code: 404 });
     }
 
     req.ObjetoUpdate = ObjetoUpdate;
@@ -781,54 +844,79 @@ export async function atualizarClientesMiddleware(req, res, next) {
   }
 }
 
-export async function ArquivarClientesMiddleware(req,res,next) {
+export async function ArquivarClientesMiddleware(req, res, next) {
   try {
-    const uuidCliente = req.params.uuid
-    const uuid = req.uuid
+    const uuidCliente = req.params.uuid;
+    const uuid = req.uuid;
 
-    if(!uuidCliente || !validar_UUID_V4(uuid)){
-      return res.status(400).json({msg:"Cliente informado invalido",code:400})
+    if (!uuidCliente || !validar_UUID_V4(uuid)) {
+      return res
+        .status(400)
+        .json({ msg: "Cliente informado invalido", code: 400 });
     }
-    const cliente = await buscarUuidClientes(uuidCliente,uuid);
+    const cliente = await buscarUuidClientes(uuidCliente, uuid);
 
-    if(!cliente){
-      return res.status(400).json({msg:"Cliente nao encontrado",code:400})
+    if (!cliente) {
+      return res.status(400).json({ msg: "Cliente nao encontrado", code: 400 });
     }
-    if(cliente.arquivado == true){
-      return res.status(400).json({msg:"Cliente ja esta arquivado",code:400})
+    if (cliente.arquivado == true) {
+      return res
+        .status(400)
+        .json({ msg: "Cliente ja esta arquivado", code: 400 });
     }
 
-    next()
+    next();
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({msg:"Um erro ocorreu",code:500})
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
-  
 }
 
-export async function cadastrarFuncionariosMiddleware(req,res,next) {
+export async function cadastrarFuncionariosMiddleware(req, res, next) {
   try {
     let { nome, email, senha, nivel_permissao } = req.body;
     const uuid = req.uuid;
 
-    if (!nome || !email || !senha || !nivel_permissao && nivel_permissao !== 0) {
-      return res.status(400).json({ msg: "Por favor, preencha os campos obrigatórios: nome, email, senha e nível de permissão.", code: 400 });
+    if (
+      !nome ||
+      !email ||
+      !senha ||
+      (!nivel_permissao && nivel_permissao !== 0)
+    ) {
+      return res.status(400).json({
+        msg: "Por favor, preencha os campos obrigatórios: nome, email, senha e nível de permissão.",
+        code: 400,
+      });
     }
     if (!validarEmail(email)) {
-      return res.status(400).json({ msg: "Email inválido. Forneça um email no formato correto.", code: 400 });
+      return res.status(400).json({
+        msg: "Email inválido. Forneça um email no formato correto.",
+        code: 400,
+      });
     }
     if (senha.length < 6) {
-      return res
-        .status(400)
-        .json({ msg: "Senha muito curta. A senha deve conter ao menos 6 caracteres.", code: 400 });
+      return res.status(400).json({
+        msg: "Senha muito curta. A senha deve conter ao menos 6 caracteres.",
+        code: 400,
+      });
     }
-    if (isNaN(Number(nivel_permissao)) || Number(nivel_permissao) < 0 || Number(nivel_permissao) > 3) {
-      return res.status(400).json({ msg: "Nível de permissão inválido. Informe um valor entre 0 e 3.", code: 400 });
+    if (
+      isNaN(Number(nivel_permissao)) ||
+      Number(nivel_permissao) < 0 ||
+      Number(nivel_permissao) > 3
+    ) {
+      return res.status(400).json({
+        msg: "Nível de permissão inválido. Informe um valor entre 0 e 3.",
+        code: 400,
+      });
     }
     const funcionarioExistente = await buscarFuncionarioEmail(email, uuid);
 
     if (funcionarioExistente) {
-      return res.status(400).json({ msg: "Este email já está em uso por outro funcionário.", code: 400 });
+      return res.status(400).json({
+        msg: "Este email já está em uso por outro funcionário.",
+        code: 400,
+      });
     }
 
     senha = await criptografarDados(senha);
@@ -838,39 +926,160 @@ export async function cadastrarFuncionariosMiddleware(req,res,next) {
       email,
       senha,
       nivel_permissao,
-      id_dono: uuid
+      id_dono: uuid,
     };
     next();
-    
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({msg:"Ocorreu um erro interno. Tente novamente mais tarde.",code:500})
+    console.error(error);
+    return res.status(500).json({
+      msg: "Ocorreu um erro interno. Tente novamente mais tarde.",
+      code: 500,
+    });
   }
-  
 }
 
-export async function DesarquivarClientesMiddleware(req,res,next) {
+export async function DesarquivarClientesMiddleware(req, res, next) {
   try {
-    const uuidCliente = req.params.uuid
-    const uuid = req.uuid
+    const uuidCliente = req.params.uuid;
+    const uuid = req.uuid;
 
-    if(!uuidCliente || !validar_UUID_V4(uuid)){
-      return res.status(400).json({msg:"Cliente informado invalido",code:400})
+    if (!uuidCliente || !validar_UUID_V4(uuid)) {
+      return res
+        .status(400)
+        .json({ msg: "Cliente informado invalido", code: 400 });
     }
-    const cliente = await buscarUuidClientes(uuidCliente,uuid);
-    
-    if(!cliente){
-      return res.status(400).json({msg:"Cliente nao encontrado",code:400})
+    const cliente = await buscarUuidClientes(uuidCliente, uuid);
+
+    if (!cliente) {
+      return res.status(400).json({ msg: "Cliente nao encontrado", code: 400 });
     }
-    if(cliente.arquivado == false){
-      return res.status(400).json({msg:"Cliente nao esta arquivado",code:400})
+    if (cliente.arquivado == false) {
+      return res
+        .status(400)
+        .json({ msg: "Cliente nao esta arquivado", code: 400 });
     }
 
-
-    next()
+    next();
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({msg:"Um erro ocorreu",code:500})
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
   }
-  
+}
+
+export async function verFuncionariosMiddleware(req, res, next) {
+  try {
+    const uuid = req.params.uuid;
+
+    if (!uuid || !validar_UUID_V4(uuid)) {
+      return res
+        .status(400)
+        .json({ msg: "Funcionario informado invalido", code: 400 });
+    }
+    const funcionario = await buscarFuncionariosUuid(uuid, req.uuid);
+
+    if (!funcionario) {
+      return res
+        .status(404)
+        .json({ msg: "Funcionário não encontrado", code: 404 });
+    }
+
+    req.data = funcionario;
+    next();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+export async function deletarFuncionarioMiddlleware(req, res, next) {
+  try {
+    const uuid = req.params.uuid;
+
+    if (!uuid || !validar_UUID_V4(uuid)) {
+      return res
+        .status(400)
+        .json({ msg: "Funcionário informado inválido", code: 400 });
+    }
+
+    const funcionario = await buscarFuncionariosUuid(uuid, req.uuid);
+
+    if (!funcionario) {
+      return res
+        .status(404)
+        .json({ msg: "Funcionário não encontrado", code: 404 });
+    }
+
+    next();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
+}
+
+export async function atualizarFuncionarioMiddleware(req, res, next) {
+  try {
+    let objetoUpdate = {};
+    let { nome, email, senha, nivel_permissao } = req.body;
+    const uuid = req.params.uuid;
+
+    if (!uuid || !validar_UUID_V4(uuid)) {
+      return res
+        .status(400)
+        .json({ msg: "Funcionário informado inválido", code: 400 });
+    }
+
+    if (!nome && !email && !senha && isNaN(Number(nivel_permissao))) {
+      return res
+        .status(400)
+        .json({ msg: "Envie pelo menos um campo para atualizar", code: 400 });
+    }
+    if (nivel_permissao) {
+      if (nivel_permissao > 3 || nivel_permissao < 0) {
+        return res
+          .status(400)
+          .json({ msg: "Nível de permissão inválido", code: 400 });
+      }
+      objetoUpdate.nivel_permissao = nivel_permissao;
+    }
+    if (email) {
+      if (!validarEmail(email)) {
+        return res.status(400).json({ msg: "Email inválido", code: 400 });
+      }
+      if (await buscarFuncionarioEmail(email, req.uuid)) {
+        return res
+          .status(400)
+          .json({ msg: "Email já em uso por outro funcionário", code: 400 });
+      }
+      objetoUpdate.email = email;
+    }
+    if (senha) {
+      if (senha && senha.length < 6) {
+        return res.status(400).json({
+          msg: "Senha muito curta. A senha deve conter ao menos 6 caracteres.",
+          code: 400,
+        });
+      }
+      senha = await criptografarDados(senha);
+      objetoUpdate.senha = senha;
+    }
+    if (nome) {
+      objetoUpdate.nome = nome;
+    }
+
+    const funcionario = await buscarFuncionariosUuid(uuid, req.uuid);
+
+    if (!funcionario) {
+      return res
+        .status(404)
+        .json({ msg: "Funcionário não encontrado", code: 404 });
+    }
+
+    req.funcionarioUpdate = objetoUpdate;
+    req.uuidFuncionario = uuid;
+
+    next();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Um erro ocorreu", code: 500 });
+  }
 }
