@@ -3,6 +3,7 @@ import { buscarUuid } from "../Cruds/Usuarios.js";
 
 export async function VisitanteMiddleware(req, res, next) {
   try {
+    let usuarioAdmin;
     let uuidFuncionario = req.uuidFuncionario;
     
     if (!uuidFuncionario) {
@@ -10,14 +11,14 @@ export async function VisitanteMiddleware(req, res, next) {
     }
     const nivel_permissao = await buscarNivelPermissao(uuidFuncionario);
     if (!nivel_permissao) {
-      const usuarioAdmin = await buscarUuid(req.uuid);
+       usuarioAdmin = await buscarUuid(req.uuid);
       if (!usuarioAdmin) {
         return res
           .status(404)
           .json({ msg: "Usuário não encontrado", code: 404 });
       }
     }
-    if (Number(nivel_permissao.nivel_permissao) == 1) {
+    if (!usuarioAdmin && Number(nivel_permissao.nivel_permissao) == 1 ) {
       return res
         .status(403)
         .json({ msg: "Acesso negado, Cargo insuficiente", code: 403 });

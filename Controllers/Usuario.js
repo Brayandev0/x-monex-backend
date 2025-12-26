@@ -101,18 +101,6 @@ export async function cadastrarEmpestimosController(req, res) {
       observacao,
       data_final,
     } = req.body;
-    console.log("ID do Cliente:", id);
-    console.log("UUID do Usuário:", uuidUsuario);
-    console.log("Data do Empréstimo:", data);
-    console.log("Data do Pagamento:", data_Pag);
-    console.log("Valor do Empréstimo:", valor);
-    console.log("Taxa de Juros:", taxa_juros);
-    console.log("Tipo de Juros:", tipo_juros);
-    console.log("Quantidade de Parcelas:", quantidade_parcelas);
-    console.log("Parcelas Pagas:", parcelas_pagas);
-    console.log("Valor da Parcela:", valor_parcela);
-    console.log("Status do Empréstimo:", status);
-    console.log("Observação:", observacao);
 
     await CadastrarEmprestimos(
       uuidUsuario,
